@@ -1,0 +1,35 @@
+---
+name: 'Deploy'
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+
+jobs:
+  deploy:
+    name: Deploy
+    environment: production
+    runs-on: ubuntu-20.04
+    steps:
+      # third-party action that cancels previous runs
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.4.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Cloning repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Push to dokku
+        uses: dokku/github-action@v1.0.2
+        with:
+          git_remote_url: 'ssh://dokku@${{ secrets.DOKKU_HOST }}:22/collect-deposit-online'
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          branch: 'main'
