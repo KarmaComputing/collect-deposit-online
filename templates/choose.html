@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<h1>Book</h1>
+
+<form action="/request-date-time">
+  <label for="products">Choose the service:</label>
+
+  <select name="product" id="products">
+      <option value="">--Please choose an option--</option>
+      <option value="dog">Dog</option>
+      <option value="cat">Cat</option>
+  </select>
+  <input type="submit" />
+</form>
+
+{% endblock %}

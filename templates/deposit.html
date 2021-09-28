@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<h1>Deposit:</h1>
+
+<p>Please reserve your booking by making a small deposit of &pound;15.</p>
+
+<p>Note: No payment is taken until we confirm your booking.</p>
+
+<form action="/create-checkout-session" method="POST">
+  <button type="submit">Checkout</button>
+</form>
+
+<script>
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+
+const product = urlParams.get('product')
+document.querySelector("#product-chosen").value = product;
+console.log(product);
+
+</script>
+
+{% endblock %}
