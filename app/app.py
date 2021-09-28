@@ -46,3 +46,8 @@ def stripe_success():
     print(session)
     # TODO store: session.setup_intent in database
     return render_template("success.html")
+
+
+@app.route("/cancel")
+def cancel():
+    return redirect("/")
