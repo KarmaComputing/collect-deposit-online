@@ -11,13 +11,14 @@
 python3 -m venv venv
 . venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env  # update with your stripe key
+cp ./app/.env.example ./app/.env  # update with your stripe key
 ```
 
 ## Run
 
 ```
 . venv/bin/activate
+cd app
 flask run
 ```
 
