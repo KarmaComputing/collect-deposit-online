@@ -32,8 +32,8 @@ def create_checkout_session():
     stripe_session = stripe.checkout.Session.create(
         payment_method_types=["card"],
         mode="setup",
-        success_url="http://localhost:5001/stripe-success?session_id={CHECKOUT_SESSION_ID}",  # noqa: E501
-        cancel_url="http://localhost:5001/cancel",
+        success_url=f"{request.host_url}/stripe-success?session_id={{CHECKOUT_SESSION_ID}}",  # noqa: E501
+        cancel_url=f"{request.host_url}/cancel",
     )
     return redirect(stripe_session.url)
 
