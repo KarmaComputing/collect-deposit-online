@@ -58,6 +58,17 @@ def stripe_success():
     stripe_session_id = request.args.get("session_id")
     session = stripe.checkout.Session.retrieve(stripe_session_id)
     print(session)
+    setup_intent = stripe.SetupIntent.retrieve(session.setup_intent)
+    # Create customer
+    stripe_customer = stripe.Customer.create(
+        email=session.metadata["customer_email"]
+    )  # noqa: E501
+    # Attach PaymentMethod to a customer
+    payment_method = setup_intent.payment_method
+    stripe.PaymentMethod.attach(
+        payment_method,
+        customer=stripe_customer,
+    )
     # TODO store: session.setup_intent in database
     # TODO store: session.metadata in database
     print(session.metadata)
