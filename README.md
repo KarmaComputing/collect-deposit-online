@@ -18,8 +18,8 @@ cp ./app/.env.example ./app/.env  # update with your stripe key
 
 ```
 . venv/bin/activate
-cd app
-flask run
+export FLASK_DEBUG=1
+python app.wsgi
 ```
 
 http://127.0.0.1:5001

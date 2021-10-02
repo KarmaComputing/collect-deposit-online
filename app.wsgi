@@ -1,3 +1,8 @@
 from app.app import app
+from livereload import Server
 
-application = app
+if __name__ == '__main__':
+    server = Server(app.wsgi_app)
+    server.serve()
+else:
+  application = app

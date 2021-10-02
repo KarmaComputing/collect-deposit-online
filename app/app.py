@@ -12,7 +12,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def choose():
-    return render_template("choose.html")
+    return render_template("choose.html", locale="es")
 
 
 @app.route("/request-date-time", methods=["GET", "POST"])
