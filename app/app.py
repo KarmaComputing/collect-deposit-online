@@ -2,9 +2,13 @@ from flask import Flask, render_template, redirect, request
 import stripe
 from dotenv import load_dotenv
 import os
+import time
+import json
+from pathlib import Path
 
 load_dotenv(verbose=True)  # take environment variables from .env.
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
+SHARED_MOUNT_POINT = os.getenv("SHARED_MOUNT_POINT")
 
 
 app = Flask(__name__)
@@ -69,8 +73,13 @@ def stripe_success():
         payment_method,
         customer=stripe_customer,
     )
-    # TODO store: session.setup_intent in database
-    # TODO store: session.metadata in database
+    filename = str(time.time_ns())
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+    with open(filePath, "w") as fp:
+        metadata = session.metadata
+        metadata["payment_method"] = payment_method
+        metadata["setup_intent"] = setup_intent.id
+        fp.write(json.dumps(metadata))
     print(session.metadata)
     return render_template("success.html")
 
