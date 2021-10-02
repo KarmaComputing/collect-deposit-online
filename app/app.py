@@ -29,11 +29,25 @@ def deposit():
 def create_checkout_session():
     stripe.api_key = STRIPE_API_KEY
 
+    requested_product = request.form.get("product")
+    requested_time = request.form.get("time")
+    requested_date = request.form.get("date")
+    customer_email = request.form.get("email", None)
+
+    metadata = {
+        "requested_product": requested_product,
+        "requested_date": requested_date,
+        "requested_time": requested_time,
+        "customer_email": customer_email,
+    }
+
     stripe_session = stripe.checkout.Session.create(
         payment_method_types=["card"],
         mode="setup",
+        customer_email=customer_email,
         success_url=f"{request.host_url}/stripe-success?session_id={{CHECKOUT_SESSION_ID}}",  # noqa: E501
         cancel_url=f"{request.host_url}/cancel",
+        metadata=metadata,
     )
     return redirect(stripe_session.url)
 
@@ -45,6 +59,8 @@ def stripe_success():
     session = stripe.checkout.Session.retrieve(stripe_session_id)
     print(session)
     # TODO store: session.setup_intent in database
+    # TODO store: session.metadata in database
+    print(session.metadata)
     return render_template("success.html")
 
 

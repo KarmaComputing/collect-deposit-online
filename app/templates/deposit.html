@@ -8,7 +8,13 @@
 <p>Note: No payment is taken until we confirm your booking.</p>
 
 <form action="/create-checkout-session" method="POST">
+  <label for="email">Email <input name="email" id="email" type="email" required /></label>
   <input type="submit" value="Checkout">
+  <input name="product" type="hidden" value="" id="product-chosen-hidden" />
+  <input name="date" type="hidden" value="" id="date-chosen-hidden" />
+  <input name="time" type="hidden" value="" id="time-chosen-hidden" />
+
+
 </form>
 
 <script>
@@ -16,8 +22,16 @@ const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 
 const product = urlParams.get('product')
-document.querySelector("#product-chosen").value = product;
+document.querySelector("#product-chosen-hidden").value = product;
 console.log(product);
+
+const date = urlParams.get('date')
+document.querySelector("#date-chosen-hidden").value = date;
+console.log(date);
+
+const time = urlParams.get('time')
+document.querySelector("#time-chosen-hidden").value = time;
+console.log(time);
 
 </script>
 
