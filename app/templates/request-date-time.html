@@ -3,11 +3,13 @@
 
 <h1>Select Date &amp; time</h1>
 
+<p>What is your preferred date &amp; time please?</p>
+
 <h2>Chosen product: <span id="product-chosen"></span></h2>
 
 <form action="/deposit">
-  <label for="time">Time <input name="time" type="time" required /></label>
   <label for="date">Date <input type="date" id="start" name="date" min="2021-01-01" max="2021-12-31"></label>
+  <label for="time">Time <input name="time" type="time" required /></label>
 
   <input name="product" type="hidden" value="" id="product-chosen-hidden" />
 

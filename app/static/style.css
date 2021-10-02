@@ -1,3 +1,28 @@
 html {
   font-family: sans-serif;
+  font-size: 1.2em;
 }
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 10px;
+}
+
+input[type=submit] {
+  display: block;
+  margin-top: 40px;
+  width: 304px;
+  height: 36px;
+  background: #92c13b;
+  border: 0px;
+  color: white;
+  font-size: 1em;
+  width: 90%;
+  max-width: 300px;
+}
+
+input[type=submit]:hover {
+  background: #91b946;
+}
+

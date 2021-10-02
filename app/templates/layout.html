@@ -3,14 +3,41 @@
 <head>
 <title>Deposit Collection Online</title>
 <meta charset="utf-8">
+<meta name="description" content="Book service online and place a deposit to reserve.">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+
+<style>
+
+#banner > #banner-colour-one {
+    height: 10px;
+    background: #C30075;
+}
+
+#banner > #banner-colour-two {
+    height: 10px;
+    background: #92c13b;
+}
+
+#footer > #footer-colour-three {
+    height: 10px;
+    background: #f79d1c;
+}
+</style>
 </head>
+<div id="banner">
+  <div id="banner-colour-one"></div>
+  <div id="banner-colour-two"></div>
+  <div id="banner-colour-three"></div>
+</div>
 <div class="container">
   {% for message in get_flashed_messages() %}
     <div class=flash>{{ message }}</div>
   {% endfor %}
   {% block body %}{% endblock %}
+</div>
+<div id="footer">
+  <div id="footer-colour-three"></div>
 </div>
 </html>

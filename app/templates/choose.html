@@ -1,18 +1,42 @@
 {% extends "layout.html" %}
 {% block body %}
 
-<h1>Book</h1>
+<style>
+
+#fieldset {
+  padding: 20px;
+  margin: 0px;
+  border: 1px solid grey;
+}
+
+#products {
+  display: block;
+  margin-top: 20px;
+  width: 90%;
+  max-width: 250px;
+  height: 36px;
+}
+
+</style>
+
+<h1>Book Now</h1>
+
+<p>Book your service now. You can choose the date and time, 
+we'll confirm your booking. A deposit will be taken after your booking request is confirmed. No money will be taken until your booking is confirmed.</p>
 
 <form action="/request-date-time">
-  <label for="products">Choose the service:</label>
+  <div id="fieldset">
+    <label for="products">Select service:</label>
+    <select name="product" id="products">
+        <option value="">--Please choose an option--</option>
+        <option value="Laser Hair Removal">Laser Hair Removal</option>
+        <option value="Waxing">Waxing</option>
+        <option value="Threading">Threading</option>
+    </select>
 
-  <select name="product" id="products">
-      <option value="">--Please choose an option--</option>
-      <option value="laser">Laser Hair Removal</option>
-      <option value="waxing">Waxing</option>
-      <option value="threading">Threading</option>
-  </select>
-  <input type="submit" />
+    <br />
+    <input id="submit-chosen-treatment" type="submit" />
+  </div>
 </form>
 
 {% endblock %}
