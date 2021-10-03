@@ -5,7 +5,11 @@ import os
 import time
 import json
 from pathlib import Path
-from .email import send_deposit_collected_email, send_booking_rescheduled_email
+from .email import (
+    send_deposit_collected_email,
+    send_booking_rescheduled_email,
+    send_booking_cancelled_email,
+)
 
 load_dotenv(verbose=True)  # take environment variables from .env.
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
@@ -139,6 +143,26 @@ def collected_deposits():
     )  # noqa: E501
 
 
+@app.route("/cancelled-bookings")
+def cancelled_bookings():
+    """List cancelled bookings"""
+    deposit_intents_path = Path(SHARED_MOUNT_POINT)
+    deposit_intents = list(
+        filter(lambda y: y.is_file(), deposit_intents_path.iterdir())
+    )
+
+    deposits = []
+    for path in deposit_intents:
+        with open(path) as fp:
+            deposit_intent = json.loads(fp.read())
+            if deposit_intent["deposit_status"] == "cancelled":
+                deposits.append(deposit_intent)
+
+    return render_template(
+        "admin/cancelled-bookings.html", deposits=deposits
+    )  # noqa: E501
+
+
 @app.route("/charge-deposit")
 def charge_deposit():
     """Charge the request to pay a deposit."""
@@ -208,10 +232,35 @@ def save_rescheduled_desposit():
         fp.truncate()
     message = f"""Booking has been rescheduled to:
             Date: {metadata['requested_date']}
-            Time: {metadata['requested_time']}.
+            Time: {metadata['requested_time']}
             Service/Product: {metadata['requested_product']}"""
     send_booking_rescheduled_email(
         to=metadata["customer_email"], content=message
     )  # noqa: E501
     flash("Reschedule complete")
     return redirect(url_for("reschedule_deposit", timestamp=filename))
+
+
+@app.route("/cancel-booking")
+def cancel_booking():
+    filename = request.args.get("timestamp", None)
+
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+    with open(filePath, "r+") as fp:
+        metadata = json.loads(fp.read())
+        metadata["deposit_status"] = "cancelled"
+
+        fp.seek(0)
+        fp.write(json.dumps(metadata))
+        fp.truncate()
+
+    message = f"""Booking has been cancelled:
+            Service/Product: {metadata['requested_product']}
+            Date: {metadata['requested_date']}
+            Time: {metadata['requested_time']}.
+            Has now been cancelled."""
+    send_booking_cancelled_email(
+        to=metadata["customer_email"], content=message
+    )  # noqa: E501
+    flash("Booking has been cancelled")
+    return redirect(url_for("available_deposits"))

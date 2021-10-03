@@ -1,10 +1,12 @@
 {% extends "layout.html" %}
+{% from "admin/admin-nav.jinja" import admin_nav %}
 {% block body %}
 
 <h1>Collected Deposits</h1>
 
+{{ admin_nav() }}
+
 <p>List of deposits which have been charged successfully.</p>
-<p>See also: <a href="{{ url_for('available_deposits') }}">Available deposits</a></p>
 <hr />
 
 {% for collected_deposit in collected_deposits %}

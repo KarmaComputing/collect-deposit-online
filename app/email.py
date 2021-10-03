@@ -50,4 +50,17 @@ def send_booking_rescheduled_email(to, content="Booking has been rescheduled"):
         msg["Reply-To"] = EMAIL_FROM
         msg.queue()
     except Exception as e:
-        log.error(f"Failed to booking rescheduled email. {e}")
+        log.error(f"Failed to send booking rescheduled email. {e}")
+
+
+def send_booking_cancelled_email(to, content="Booking has been cancelled"):
+    try:
+        msg = EmailMessageQueue()
+        msg["Subject"] = "Booking cancelled"
+        msg["From"] = EMAIL_FROM
+        msg["To"] = to
+        msg.set_content(content)
+        msg["Reply-To"] = EMAIL_FROM
+        msg.queue()
+    except Exception as e:
+        log.error(f"Failed to send booking cancelled email. {e}")

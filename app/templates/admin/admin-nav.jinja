@@ -1,0 +1,9 @@
+{% macro admin_nav() -%}
+
+<p>See also: 
+<a href="{{ url_for('collected_deposits') }}">Collected deposits</a> / 
+<a href="{{ url_for('available_deposits') }}">Available deposits</a> / 
+<a href="{{ url_for('cancelled_bookings') }}">Cancelled Bookings</a></p>
+<hr />
+
+{%- endmacro %}

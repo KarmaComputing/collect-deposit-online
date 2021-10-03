@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<h1>Cancelled Bookings</h1>
+
+<p>List of bookings which have been cancelled.</p>
+<p>See also: <a href="{{ url_for('available_deposits') }}">Available deposits</a></p>
+<hr />
+
+{% for deposit in deposits %}
+  <p>Service: {{ deposit['requested_product'] }}</p>
+  <p>Customer name: {{ deposit['customer_name'] or 'Not given' }}</p>
+  <p>Customer mobile: {{ deposit['customer_mobile'] or 'Not given' }}</p>
+  <p>Email: {{ deposit['customer_email'] }}</p>
+  <p>Date requested: {{ deposit['requested_date'] }}</p>
+
+  <p>Metadata</p>
+  <small>
+  <code>
+  {{ deposit }}
+  </code>
+  </p>
+  </small>
+  <hr />
+{% endfor %}
+
+
+{% endblock %}

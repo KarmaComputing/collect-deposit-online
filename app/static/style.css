@@ -33,6 +33,10 @@ input[type=submit], .btn {
   background: #f79d1c;
 }
 
+.btn-danger {
+  background: #de3f25; /* red */
+}
+
 input[type=submit]:hover, .btn-primary {
   background: #91b946;
 }
