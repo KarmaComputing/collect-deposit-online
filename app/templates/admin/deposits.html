@@ -1,18 +1,27 @@
 {% extends "layout.html" %}
 {% block body %}
 
-<h1>Deposits Available</h1>
+<h1>Available Deposits</h1>
 
 <p>List of deposits which are available for charging.</p>
+<p>See also: <a href="{{ url_for('collected_deposits') }}">Collected deposits</a></p>
 
 <hr />
+
+{% if available_deposits|length == 0 %}
+
+    There are no deposits available.
+{% endif %}
 
 {% for available_deposit in available_deposits %}
 
   <p>Service: {{ available_deposit['requested_product'] }}</p>
+  <p>Customer name: {{ available_deposit['customer_name'] or 'Not given' }}</p>
+  <p>Customer mobile: {{ available_deposit['customer_mobile'] or 'Not given' }}</p>
   <p>Email: {{ available_deposit['customer_email'] }}</p>
   <p>Date requested: {{ available_deposit['requested_date'] }}</p>
 
+  <span id="charge-deposit-message"></span>
   <a href="/charge-deposit?payment_method_id={{ available_deposit['payment_method'] }}&stripe_customer_id={{ available_deposit['stripe_customer_id'] }}&timestamp={{ available_deposit['timestamp'] }}" id="charge-deposit" class="button">Confirm &amp; charge &pound;15 now</a>
 
   <p>Metadata</p>
@@ -29,6 +38,10 @@
   chargeBtn = document.getElementById("charge-deposit");
   chargeBtn.addEventListener("click", function(e) {
     e.target.style.display = "none";
+    chargeDepositMsg = document.querySelector('#charge-deposit-message');
+    chargeDepositMsg.textContent = "Charging deposit now...";
+    chargeDepositMsg.style.border = '1px solid lightgray';
+    chargeDepositMsg.style.padding = '10px';
   });
   </script>
 

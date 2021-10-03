@@ -8,7 +8,13 @@
 <p>Note: No payment is taken until we confirm your booking.</p>
 
 <form action="/create-checkout-session" method="POST">
-  <label for="email">Email <input name="email" id="email" type="email" required /></label>
+  <label for="email">Email <input name="email" id="email" type="email" required /> (required)</label>
+  <br />
+  <br />
+  <label for="name">Name <input name="name" id="name" /></label>
+  <br />
+  <br />
+  <label for="mobile">Mobile <input name="mobile" id="mobile" /></label>
   <input type="submit" value="Checkout">
   <input name="product" type="hidden" value="" id="product-chosen-hidden" />
   <input name="date" type="hidden" value="" id="date-chosen-hidden" />

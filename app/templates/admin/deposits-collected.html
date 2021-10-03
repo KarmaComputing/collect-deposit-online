@@ -1,13 +1,16 @@
 {% extends "layout.html" %}
 {% block body %}
 
-<h1>Deposits Collected</h1>
+<h1>Collected Deposits</h1>
 
 <p>List of deposits which have been charged successfully.</p>
+<p>See also: <a href="{{ url_for('available_deposits') }}">Available deposits</a></p>
 <hr />
 
 {% for collected_deposit in collected_deposits %}
   <p>Service: {{ collected_deposit['requested_product'] }}</p>
+  <p>Customer name: {{ collected_deposit['customer_name'] or 'Not given' }}</p>
+  <p>Customer mobile: {{ collected_deposit['customer_mobile'] or 'Not given' }}</p>
   <p>Email: {{ collected_deposit['customer_email'] }}</p>
   <p>Date requested: {{ collected_deposit['requested_date'] }}</p>
 

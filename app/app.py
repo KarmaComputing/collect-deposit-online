@@ -40,12 +40,16 @@ def create_checkout_session():
     requested_time = request.form.get("time")
     requested_date = request.form.get("date")
     customer_email = request.form.get("email", None)
+    customer_name = request.form.get("name", None)
+    customer_mobile = request.form.get("mobile", None)
 
     metadata = {
         "requested_product": requested_product,
         "requested_date": requested_date,
         "requested_time": requested_time,
         "customer_email": customer_email,
+        "customer_name": customer_name,
+        "customer_mobile": customer_mobile,
     }
 
     stripe_session = stripe.checkout.Session.create(
@@ -96,8 +100,8 @@ def cancel():
 
 
 @app.route("/deposits")
-def deposits():
-    """List deposits"""
+def available_deposits():
+    """List available deposits"""
     deposit_intents_path = Path(SHARED_MOUNT_POINT)
     deposit_intents = list(
         filter(lambda y: y.is_file(), deposit_intents_path.iterdir())
@@ -115,8 +119,8 @@ def deposits():
     )  # noqa: E501
 
 
-@app.route("/deposits-collected")
-def deposit_collected():
+@app.route("/collected-deposits")
+def collected_deposits():
     """List collected deposits"""
     deposit_intents_path = Path(SHARED_MOUNT_POINT)
     deposit_intents = list(
@@ -168,7 +172,7 @@ def charge_deposit():
     # See https://stripe.com/docs/api/payment_intents/confirm?lang=python
     notify_deposit_collected(metadata)
     flash("Deposit taken &amp; notification email sent")
-    return redirect(url_for("deposits"))
+    return redirect(url_for("collected_deposits"))
 
 
 def notify_deposit_collected(metadata):
