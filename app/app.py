@@ -236,7 +236,7 @@ def charge_deposit():
     # Note: There may be no need to stripe.PaymentIntent.capture it manually
     # See https://stripe.com/docs/api/payment_intents/confirm?lang=python
     notify_deposit_collected(metadata)
-    flash("Deposit taken &amp; notification email sent")
+    flash("Deposit taken & notification email sent")
     return redirect(url_for("collected_deposits"))
 
 

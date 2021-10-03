@@ -25,6 +25,7 @@
   <p>Customer mobile: {{ deposit['customer_mobile'] or 'Not given' }}</p>
   <p>Email: {{ deposit['customer_email'] }}</p>
   <p>Date requested: {{ deposit['requested_date'] }}</p>
+  <p>Time requested: {{ deposit['requested_time'] }}</p>
 
   {{ refund_deposit_btn(timestamp=deposit['timestamp']) }}
 

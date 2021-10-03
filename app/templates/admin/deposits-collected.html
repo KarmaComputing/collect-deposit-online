@@ -16,6 +16,7 @@
   <p>Customer mobile: {{ collected_deposit['customer_mobile'] or 'Not given' }}</p>
   <p>Email: {{ collected_deposit['customer_email'] }}</p>
   <p>Date requested: {{ collected_deposit['requested_date'] }}</p>
+  <p>Time requested: {{ collected_deposit['requested_time'] }}</p>
 
   {{ reschedule_booking_btn(timestamp=collected_deposit['timestamp']) }}
   {{ cancel_booking_btn(timestamp=collected_deposit['timestamp']) }}
