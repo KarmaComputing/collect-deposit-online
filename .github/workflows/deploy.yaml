@@ -31,6 +31,27 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Create dokku app if doesn't already exist using dokku apps:create
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DOKKU_HOST: ${{ secrets.DOKKU_HOST }}
+        run: |
+          set -x
+          eval `ssh-agent -s`
+          ssh-add - <<< "$SSH_PRIVATE_KEY"
+          echo Creating dokku app
+          ssh dokku@$DOKKU_HOST -C "dokku apps:create ${{ secrets.DOKKU_APP_NAME }}" | true
+          ssh dokku@$DOKKU_HOST -C "dokku git:initialize ${{ secrets.DOKKU_APP_NAME }}"
+          ssh dokku@$DOKKU_HOST -C "dokku git:set ${{ env.SUBDOMAIN }} deploy-branch ${{ secrets.DOKKU_DEPLOY_BRANCH_NAME }}"
+          # set Dokku app environment settings
+          ssh dokku@$DOKKU_HOST -C "dokku config:set --no-restart ${{ secrets.DOKKU_APP_NAME }} STRIPE_TEST_SECRET_KEY=${{ secrets.STRIPE_TEST_SECRET_KEY }}"
+          ssh dokku@$DOKKU_HOST -C "dokku config:set --no-restart ${{ secrets.DOKKU_APP_NAME }} SECRET_KEY=${{ secrets.SECRET_KEY }}"
+          ssh dokku@$DOKKU_HOST -C "dokku config:set --no-restart ${{ secrets.DOKKU_APP_NAME }} SHARED_MOUNT_POINT=${{ secrets.SHARED_MOUNT_POINT }}"
+          # Create shared mount point
+          ssh dokku@$DOKKU_HOST -C "mkdir -p /home/dokku/shared-mount-collect-deposit-online"
+          ssh dokku@$DOKKU_HOST -C "dokku storage:mount collect-deposit-online ${{ secrets.HOST_SHARED_DIRECTORY }}:${{ secrets.SHARED_MOUNT_POINT }}"
+
+
       - name: Deploy to dokku
         uses: idoberko2/dokku-deploy-github-action@v1
         with:
