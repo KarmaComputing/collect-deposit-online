@@ -5,6 +5,7 @@ import os
 import time
 import json
 from pathlib import Path
+from .email import send_deposit_collected_email
 
 load_dotenv(verbose=True)  # take environment variables from .env.
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
@@ -165,5 +166,10 @@ def charge_deposit():
 
     # Note: There may be no need to stripe.PaymentIntent.capture it manually
     # See https://stripe.com/docs/api/payment_intents/confirm?lang=python
-    flash("Deposit taken")
+    notify_deposit_collected(metadata)
+    flash("Deposit taken &amp; notification email sent")
     return redirect(url_for("deposits"))
+
+
+def notify_deposit_collected(metadata):
+    send_deposit_collected_email(metadata["customer_email"])
