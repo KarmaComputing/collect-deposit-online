@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% from "admin/admin-nav.jinja" import admin_nav %}
-{% from "admin/admin-buttons.jinja" import reschedule_booking_btn %}
+{% from "admin/admin-buttons.jinja" import reschedule_booking_btn, cancel_booking_btn %}
 
 {% block body %}
 
@@ -8,15 +8,22 @@
 {{ admin_nav() }}
 
 
-<p>List of deposits which are available for charging.</p>
-<p>This means a person has given permission to be charged automatically as soon as
-their requested booking is confirmed.</p>
+<h3>Understanding Available Deposits</h1>
+<p>An available deposit means a person has given permission to be charged, but only if their requested
+booking is available.</p>
+
+<p>If their requested booking is available, you can charge them automatically now by clicking "Confirm &amp; charge", and the payment will be taken.</p>
+
+<p>If the prodict/service requested is not available, you may wish to contact them, and reshedule the request.</p>
+
+<p>Finally, if not possible at all, then the request may be cancelled by clicking 'Cancel Booking'. No payment is taken unless you press 'Confirm &amp; charge'.</p>
+
 
 <hr />
 
 {% if available_deposits|length == 0 %}
 
-    There are no deposits available.
+There are no new deposit requests. See <a href="{{ url_for('collected_deposits')}}">collected deposits.</a>
 {% endif %}
 
 {% for available_deposit in available_deposits %}
@@ -28,10 +35,12 @@ their requested booking is confirmed.</p>
   <p>Date requested: {{ available_deposit['requested_date'] }}</p>
 
   <span id="charge-deposit-message"></span>
-  <a href="/charge-deposit?payment_method_id={{ available_deposit['payment_method'] }}&stripe_customer_id={{ available_deposit['stripe_customer_id'] }}&timestamp={{ available_deposit['timestamp'] }}" id="charge-deposit" class="btn btn-primary">Confirm &amp; charge &pound;15 now</a>
+  <a href="{{ url_for('charge_deposit', payment_method_id=available_deposit['payment_method'], stripe_customer_id=available_deposit['stripe_customer_id'], timestamp=available_deposit['timestamp']) }}" id="charge-deposit" class="btn btn-primary">Confirm &amp; charge &pound;15 now</a>
 
   {{ reschedule_booking_btn(timestamp=available_deposit['timestamp']) }}
-  <a href="{{ url_for('cancel_booking', timestamp=available_deposit['timestamp']) }} " id="cancel-booking" class="btn btn-danger">Cancel</a>
+
+  {{ cancel_booking_btn(timestamp=available_deposit['timestamp']) }}
+
   <p>Metadata</p>
   <small>
   <code>

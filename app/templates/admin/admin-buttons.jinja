@@ -1,5 +1,20 @@
 {% macro reschedule_booking_btn(timestamp=None) -%}
 
-  <a href="/reschedule?timestamp={{ timestamp }}" id="reschedule-deposit" class="btn btn-warning">Reschedule</a>
+  <a href="{{ url_for('reschedule_deposit', timestamp=timestamp) }}" id="reschedule-deposit" class="btn btn-warning">Reschedule</a>
+
+{%- endmacro %}
+
+
+
+{% macro refund_deposit_btn(timestamp=None) -%}
+
+  <a href="{{ url_for('refund_deposit', timestamp=timestamp) }}" id="refund-deposit" class="btn btn-danger">Refund</a>
+
+{%- endmacro %}
+
+
+{% macro cancel_booking_btn(timestamp=None) -%}
+
+  <a href="{{ url_for('cancel_booking', timestamp=timestamp) }}" id="cancel-booking" class="btn btn-danger">Cancel Booking</a>
 
 {%- endmacro %}

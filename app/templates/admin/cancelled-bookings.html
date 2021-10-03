@@ -1,11 +1,23 @@
 {% extends "layout.html" %}
+{% from "admin/admin-nav.jinja" import admin_nav %}
+{% from "admin/admin-buttons.jinja" import refund_deposit_btn %}
 {% block body %}
 
 <h1>Cancelled Bookings</h1>
 
+{{ admin_nav() }}
+
 <p>List of bookings which have been cancelled.</p>
-<p>See also: <a href="{{ url_for('available_deposits') }}">Available deposits</a></p>
+
+<h3>Understanding cancelled bookings</h3>
+
+<ul>
+  <li>A booking may or not have been charged.</li>
+  <li>If payment has been collected, it may optionally be refunded</li>
+</ul>
+
 <hr />
+
 
 {% for deposit in deposits %}
   <p>Service: {{ deposit['requested_product'] }}</p>
@@ -13,6 +25,8 @@
   <p>Customer mobile: {{ deposit['customer_mobile'] or 'Not given' }}</p>
   <p>Email: {{ deposit['customer_email'] }}</p>
   <p>Date requested: {{ deposit['requested_date'] }}</p>
+
+  {{ refund_deposit_btn(timestamp=deposit['timestamp']) }}
 
   <p>Metadata</p>
   <small>

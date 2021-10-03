@@ -1,4 +1,12 @@
-from flask import Flask, render_template, redirect, request, flash, url_for
+from flask import (
+    Flask,
+    render_template,
+    redirect,
+    request,
+    flash,
+    url_for,
+    session,
+)  # noqa: E501
 import stripe
 from dotenv import load_dotenv
 import os
@@ -9,7 +17,9 @@ from .email import (
     send_deposit_collected_email,
     send_booking_rescheduled_email,
     send_booking_cancelled_email,
+    send_deposit_refund_email,
 )
+from functools import wraps
 
 load_dotenv(verbose=True)  # take environment variables from .env.
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
@@ -19,6 +29,33 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = SECRET_KEY
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "logged-in" not in session:
+            return redirect(url_for("login", next=request.url))
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+    if request.form.get("password") == ADMIN_PASSWORD:
+        session["logged-in"] = True
+        return redirect(url_for("admin"))
+    else:
+        flash("Try again")
+        return render_template("admin/login.html")
+
+
+@app.route("/admin")
+@login_required
+def admin():
+    return render_template("admin/dashboard.html")
 
 
 @app.route("/")
@@ -103,7 +140,8 @@ def cancel():
     return redirect("/")
 
 
-@app.route("/deposits")
+@app.route("/admin/deposits")
+@login_required
 def available_deposits():
     """List available deposits"""
     deposit_intents_path = Path(SHARED_MOUNT_POINT)
@@ -123,7 +161,8 @@ def available_deposits():
     )  # noqa: E501
 
 
-@app.route("/collected-deposits")
+@app.route("/admin/collected-deposits")
+@login_required
 def collected_deposits():
     """List collected deposits"""
     deposit_intents_path = Path(SHARED_MOUNT_POINT)
@@ -143,7 +182,8 @@ def collected_deposits():
     )  # noqa: E501
 
 
-@app.route("/cancelled-bookings")
+@app.route("/admin/cancelled-bookings")
+@login_required
 def cancelled_bookings():
     """List cancelled bookings"""
     deposit_intents_path = Path(SHARED_MOUNT_POINT)
@@ -163,7 +203,8 @@ def cancelled_bookings():
     )  # noqa: E501
 
 
-@app.route("/charge-deposit")
+@app.route("/admin/charge-deposit")
+@login_required
 def charge_deposit():
     """Charge the request to pay a deposit."""
     payment_method_id = request.args.get("payment_method_id", None)
@@ -182,12 +223,12 @@ def charge_deposit():
     # Note: the PaymentIntent will automatically transation to succeeded if possible # noqa: E501
     # See https://stripe.com/docs/payments/intents#intent-statuses
     stripe.PaymentIntent.confirm(payment_intent)
-
     # Set deposit_status as collected
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath, "r+") as fp:
         metadata = json.loads(fp.read())
         metadata["deposit_status"] = "collected"
+        metadata["stripe_payment_intent_id"] = payment_intent.id
         fp.seek(0)
         fp.write(json.dumps(metadata))
         fp.truncate()
@@ -203,7 +244,8 @@ def notify_deposit_collected(metadata):
     send_deposit_collected_email(metadata["customer_email"])
 
 
-@app.route("/reschedule")
+@app.route("/admin/reschedule")
+@login_required
 def reschedule_deposit():
     filename = request.args.get("timestamp", None)
     filePath = Path(SHARED_MOUNT_POINT, filename)
@@ -213,7 +255,8 @@ def reschedule_deposit():
     return render_template("admin/reschedule.html", metadata=metadata)
 
 
-@app.route("/save-rescheduled-deposit")
+@app.route("/admin/save-rescheduled-deposit")
+@login_required
 def save_rescheduled_desposit():
     requested_product = request.args.get("product")
     requested_time = request.args.get("time")
@@ -241,7 +284,8 @@ def save_rescheduled_desposit():
     return redirect(url_for("reschedule_deposit", timestamp=filename))
 
 
-@app.route("/cancel-booking")
+@app.route("/admin/cancel-booking")
+@login_required
 def cancel_booking():
     filename = request.args.get("timestamp", None)
 
@@ -263,4 +307,61 @@ def cancel_booking():
         to=metadata["customer_email"], content=message
     )  # noqa: E501
     flash("Booking has been cancelled")
-    return redirect(url_for("available_deposits"))
+    return redirect(url_for("cancelled_bookings"))
+
+
+@app.route("/admin/refund-deposit")
+@login_required
+def refund_deposit():
+    filename = request.args.get("timestamp", None)
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+
+    with open(filePath, "r+") as fp:
+        metadata = json.loads(fp.read())
+        # Perform refund
+        stripe.api_key = STRIPE_API_KEY
+        try:
+            stripe_refund = stripe.Refund.create(
+                payment_intent=metadata["stripe_payment_intent_id"]
+            )
+            metadata["stripe_refund_id"] = stripe_refund.id
+            metadata["deposit_status"] = "refunded"
+            fp.seek(0)
+            fp.write(json.dumps(metadata))
+            fp.truncate()
+            message = f"""Booking deposit refund started:
+                    Service/Product: {metadata['requested_product']}
+                    Date: {metadata['requested_date']}
+                    Time: {metadata['requested_time']}.
+                    Is being refunded."""
+            send_deposit_refund_email(
+                to=metadata["customer_email"], content=message
+            )  # noqa: E501
+            flash("Deposit has been refunded")
+        except stripe.error.InvalidRequestError as error:
+            if error.code == "charge_already_refunded":
+                flash("Charge has already been refunded")
+            else:
+                raise
+
+    return redirect(url_for("refunded_deposits"))
+
+
+@app.route("/admin/refunded-deposits")
+@login_required
+def refunded_deposits():
+    """List refunded deposits"""
+    deposit_intents_path = Path(SHARED_MOUNT_POINT)
+    deposit_intents = list(
+        filter(lambda y: y.is_file(), deposit_intents_path.iterdir())
+    )
+    deposits = []
+    for path in deposit_intents:
+        with open(path) as fp:
+            deposit_intent = json.loads(fp.read())
+            if deposit_intent["deposit_status"] == "refunded":
+                deposits.append(deposit_intent)
+
+    return render_template(
+        "admin/refunded-deposits.html", deposits=deposits
+    )  # noqa: E501

@@ -1,10 +1,13 @@
 {% extends "layout.html" %}
+{% from "admin/admin-nav.jinja" import admin_nav %}
 {% block body %}
 
 <h1>Reshedule Booking</h1>
 
 <p>Reschedule the requeted booking. 
 An email notification will automatically be sent.</p>
+
+{{ admin_nav() }}
 
 <form action="{{ url_for('save_rescheduled_desposit') }}">
   <div id="fieldset">

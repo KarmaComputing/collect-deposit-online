@@ -64,3 +64,16 @@ def send_booking_cancelled_email(to, content="Booking has been cancelled"):
         msg.queue()
     except Exception as e:
         log.error(f"Failed to send booking cancelled email. {e}")
+
+
+def send_deposit_refund_email(to, content="Deposit refund started"):
+    try:
+        msg = EmailMessageQueue()
+        msg["Subject"] = "Deposit is being refunded"
+        msg["From"] = EMAIL_FROM
+        msg["To"] = to
+        msg.set_content(content)
+        msg["Reply-To"] = EMAIL_FROM
+        msg.queue()
+    except Exception as e:
+        log.error(f"Failed to send deposit being refunded email. {e}")
