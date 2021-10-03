@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block body %}
+
+<h1>Login</h1>
+
+<form action="{{ url_for('login') }}" method="POST">
+  <div id="fieldset">
+    <label for="password">Password: <input type="password" name="password" /></label>
+
+    <br />
+    <input type="submit" class="btn btn-primary" value="Login" />
+  </div>
+</form>
+
+
+{% endblock %}
