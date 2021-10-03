@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<h1>Deposits Collected</h1>
+
+<p>List of deposits which have been charged successfully.</p>
+<hr />
+
+{% for collected_deposit in collected_deposits %}
+  <p>Service: {{ collected_deposit['requested_product'] }}</p>
+  <p>Email: {{ collected_deposit['customer_email'] }}</p>
+  <p>Date requested: {{ collected_deposit['requested_date'] }}</p>
+
+  <p>Metadata</p>
+  <small>
+  <code>
+  {{ collected_deposit }}
+  </code>
+  </p>
+  </small>
+  <hr />
+{% endfor %}
+
+
+{% endblock %}

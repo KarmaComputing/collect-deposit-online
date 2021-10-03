@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<h1>Deposits Available</h1>
+
+<p>List of deposits which are available for charging.</p>
+
+<hr />
+
+{% for available_deposit in available_deposits %}
+
+  <p>Service: {{ available_deposit['requested_product'] }}</p>
+  <p>Email: {{ available_deposit['customer_email'] }}</p>
+  <p>Date requested: {{ available_deposit['requested_date'] }}</p>
+
+  <a href="/charge-deposit?payment_method_id={{ available_deposit['payment_method'] }}&stripe_customer_id={{ available_deposit['stripe_customer_id'] }}&timestamp={{ available_deposit['timestamp'] }}" id="charge-deposit" class="button">Confirm &amp; charge &pound;15 now</a>
+
+  <p>Metadata</p>
+  <small>
+  <code>
+  {{ available_deposit }}
+  </code>
+  </small>
+
+  <hr />
+{% endfor %}
+
+  <script>
+  chargeBtn = document.getElementById("charge-deposit");
+  chargeBtn.addEventListener("click", function(e) {
+    e.target.style.display = "none";
+  });
+  </script>
+
+{% endblock %}
