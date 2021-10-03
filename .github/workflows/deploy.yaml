@@ -16,6 +16,9 @@ jobs:
     name: Deploy
     environment: production
     runs-on: ubuntu-20.04
+    concurrency:
+      group: main
+      cancel-in-progress: true
     steps:
       # third-party action that cancels previous runs
       - name: Cancel Previous Runs
