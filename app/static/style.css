@@ -9,7 +9,7 @@ html {
   padding: 10px;
 }
 
-input[type=submit] {
+input[type=submit], .button {
   display: block;
   margin-top: 40px;
   width: 304px;
@@ -20,9 +20,15 @@ input[type=submit] {
   font-size: 1em;
   width: 90%;
   max-width: 300px;
+  text-decoration: none;
+  text-align: center;
 }
 
-input[type=submit]:hover {
+input[type=submit]:hover, .button {
   background: #91b946;
 }
 
+.flash {
+  border: 2px solid lightgray;
+  padding: 15px;
+}

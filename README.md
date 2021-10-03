@@ -22,4 +22,4 @@ export FLASK_DEBUG=1
 python app.wsgi
 ```
 
-http://127.0.0.1:5001
+http://127.0.0.1:5500/

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request
+from flask import Flask, render_template, redirect, request, flash, url_for
 import stripe
 from dotenv import load_dotenv
 import os
@@ -9,9 +9,11 @@ from pathlib import Path
 load_dotenv(verbose=True)  # take environment variables from .env.
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
 SHARED_MOUNT_POINT = os.getenv("SHARED_MOUNT_POINT")
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = SECRET_KEY
 
 
 @app.route("/")
@@ -77,8 +79,11 @@ def stripe_success():
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath, "w") as fp:
         metadata = session.metadata
+        metadata["timestamp"] = filename
         metadata["payment_method"] = payment_method
         metadata["setup_intent"] = setup_intent.id
+        metadata["stripe_customer_id"] = stripe_customer.id
+        metadata["deposit_status"] = "available_for_collection"
         fp.write(json.dumps(metadata))
     print(session.metadata)
     return render_template("success.html")
@@ -87,3 +92,78 @@ def stripe_success():
 @app.route("/cancel")
 def cancel():
     return redirect("/")
+
+
+@app.route("/deposits")
+def deposits():
+    """List deposits"""
+    deposit_intents_path = Path(SHARED_MOUNT_POINT)
+    deposit_intents = list(
+        filter(lambda y: y.is_file(), deposit_intents_path.iterdir())
+    )
+
+    available_deposits = []
+    for path in deposit_intents:
+        with open(path) as fp:
+            deposit_intent = json.loads(fp.read())
+            if deposit_intent["deposit_status"] == "available_for_collection":
+                available_deposits.append(deposit_intent)
+
+    return render_template(
+        "admin/deposits.html", available_deposits=available_deposits
+    )  # noqa: E501
+
+
+@app.route("/deposits-collected")
+def deposit_collected():
+    """List collected deposits"""
+    deposit_intents_path = Path(SHARED_MOUNT_POINT)
+    deposit_intents = list(
+        filter(lambda y: y.is_file(), deposit_intents_path.iterdir())
+    )
+
+    collected_deposits = []
+    for path in deposit_intents:
+        with open(path) as fp:
+            deposit_intent = json.loads(fp.read())
+            if deposit_intent["deposit_status"] == "collected":
+                collected_deposits.append(deposit_intent)
+
+    return render_template(
+        "admin/deposits-collected.html", collected_deposits=collected_deposits
+    )  # noqa: E501
+
+
+@app.route("/charge-deposit")
+def charge_deposit():
+    """Charge the request to pay a deposit."""
+    payment_method_id = request.args.get("payment_method_id", None)
+    stripe_customer_id = request.args.get("stripe_customer_id", None)
+    filename = request.args.get("timestamp", None)
+
+    stripe.api_key = STRIPE_API_KEY
+    payment_intent = stripe.PaymentIntent.create(
+        amount=1500,
+        currency="gbp",
+        payment_method_types=["card"],
+        payment_method=payment_method_id,
+        customer=stripe_customer_id,
+    )
+    # Confirm the PaymentIntent
+    # Note: the PaymentIntent will automatically transation to succeeded if possible # noqa: E501
+    # See https://stripe.com/docs/payments/intents#intent-statuses
+    stripe.PaymentIntent.confirm(payment_intent)
+
+    # Set deposit_status as collected
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+    with open(filePath, "r+") as fp:
+        metadata = json.loads(fp.read())
+        metadata["deposit_status"] = "collected"
+        fp.seek(0)
+        fp.write(json.dumps(metadata))
+        fp.truncate()
+
+    # Note: There may be no need to stripe.PaymentIntent.capture it manually
+    # See https://stripe.com/docs/api/payment_intents/confirm?lang=python
+    flash("Deposit taken")
+    return redirect(url_for("deposits"))
