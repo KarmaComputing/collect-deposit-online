@@ -5,7 +5,7 @@ import os
 import time
 import json
 from pathlib import Path
-from .email import send_deposit_collected_email
+from .email import send_deposit_collected_email, send_booking_rescheduled_email
 
 load_dotenv(verbose=True)  # take environment variables from .env.
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
@@ -177,3 +177,41 @@ def charge_deposit():
 
 def notify_deposit_collected(metadata):
     send_deposit_collected_email(metadata["customer_email"])
+
+
+@app.route("/reschedule")
+def reschedule_deposit():
+    filename = request.args.get("timestamp", None)
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+    with open(filePath) as fp:
+        metadata = json.loads(fp.read())
+
+    return render_template("admin/reschedule.html", metadata=metadata)
+
+
+@app.route("/save-rescheduled-deposit")
+def save_rescheduled_desposit():
+    requested_product = request.args.get("product")
+    requested_time = request.args.get("time")
+    requested_date = request.args.get("date")
+    filename = request.args.get("timestamp", None)
+
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+    with open(filePath, "r+") as fp:
+        metadata = json.loads(fp.read())
+        metadata["requested_date"] = requested_date
+        metadata["requested_time"] = requested_time
+        metadata["requested_product"] = requested_product
+
+        fp.seek(0)
+        fp.write(json.dumps(metadata))
+        fp.truncate()
+    message = f"""Booking has been rescheduled to:
+            Date: {metadata['requested_date']}
+            Time: {metadata['requested_time']}.
+            Service/Product: {metadata['requested_product']}"""
+    send_booking_rescheduled_email(
+        to=metadata["customer_email"], content=message
+    )  # noqa: E501
+    flash("Reschedule complete")
+    return redirect(url_for("reschedule_deposit", timestamp=filename))

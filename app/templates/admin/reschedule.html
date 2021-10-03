@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<h1>Reshedule Booking</h1>
+
+<p>Reschedule the requeted booking. 
+An email notification will automatically be sent.</p>
+
+<form action="{{ url_for('save_rescheduled_desposit') }}">
+  <div id="fieldset">
+    Name: {{ metadata['customer_name'] }}
+    <br />
+    <br />
+    Mobile: {{ metadata['customer_mobile'] or 'Not given' }}
+    <br />
+    <br />
+    Email: {{ metadata['customer_email'] }}
+    <br />
+    <br />
+    <label for="date">Date <input type="date" id="start" name="date" min="2021-01-01" max="2021-12-31" value="{{ metadata['requested_date'] }}"></label>
+
+    <label for="time">Time <input name="time" type="time" value="{{ metadata['requested_time'] }}" required /></label>
+
+    <input name="timestamp" type="hidden" value="{{ metadata['timestamp'] }}" />
+
+  <br />
+  <br />
+  <label for="product">Product <input name="product" value="{{ metadata['requested_product'] }}" /></label>
+
+  <input type="submit" class="btn btn-primary" />
+  <hr />
+  <p>Metadata</p>
+  <small>
+    <code>
+    {{ metadata }}
+    </code>
+  </small>
+  </div>
+</form>
+
+{% endblock %}

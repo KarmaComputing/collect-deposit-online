@@ -38,3 +38,16 @@ def send_deposit_collected_email(to):
         msg.queue()
     except Exception as e:
         log.error(f"Failed to send deposit collected email. {e}")
+
+
+def send_booking_rescheduled_email(to, content="Booking has been rescheduled"):
+    try:
+        msg = EmailMessageQueue()
+        msg["Subject"] = "Booking rescheduled"
+        msg["From"] = EMAIL_FROM
+        msg["To"] = to
+        msg.set_content(content)
+        msg["Reply-To"] = EMAIL_FROM
+        msg.queue()
+    except Exception as e:
+        log.error(f"Failed to booking rescheduled email. {e}")

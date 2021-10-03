@@ -24,6 +24,7 @@
   <span id="charge-deposit-message"></span>
   <a href="/charge-deposit?payment_method_id={{ available_deposit['payment_method'] }}&stripe_customer_id={{ available_deposit['stripe_customer_id'] }}&timestamp={{ available_deposit['timestamp'] }}" id="charge-deposit" class="btn btn-primary">Confirm &amp; charge &pound;15 now</a>
 
+  <a href="/reschedule?timestamp={{ available_deposit['timestamp'] }}" id="reschedule-deposit" class="btn btn-warning">Reschedule</a>
   <p>Metadata</p>
   <small>
   <code>
