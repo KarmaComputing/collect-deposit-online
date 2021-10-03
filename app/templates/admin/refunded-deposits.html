@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+{% from "admin/admin-nav.jinja" import admin_nav %}
+{% block body %}
+
+<h1>Refunded Deposits</h1>
+
+{{ admin_nav() }}
+
+<p>List of deposits which have been refunded.</p>
+
+<h3>Tracing a refund</h3>
+<p>After you initiate a refund, Stripe submits refund requests to your customer’s bank or card issuer. Your customer sees the refund as a credit approximately 5-10 business days later, depending upon the bank.</p>
+
+<p>A customer may contact you if they don’t see the refund. A refund may not be visible to the customer for several reasons:</p>
+
+<ul>
+  <li>Refunds issued shortly after the original charge appear in the form of a reversal instead of a refund. In the case of a reversal, the original charge drops off the customer’s statement, and a separate credit is not issued.</li>
+  <li>Refunds can fail if the customer’s bank or card issuer has been unable to process it correctly. The bank returns the refunded amount to us and we add it back to your Stripe account balance. This process can take up to 30 days from requesting the refund.</li>
+</ul>
+
+
+<hr />
+
+{% for deposit in deposits %}
+  <p>Service: {{ deposit['requested_product'] }}</p>
+  <p>Customer name: {{ deposit['customer_name'] or 'Not given' }}</p>
+  <p>Customer mobile: {{ deposit['customer_mobile'] or 'Not given' }}</p>
+  <p>Email: {{ deposit['customer_email'] }}</p>
+  <p>Date requested: {{ deposit['requested_date'] }}</p>
+  <p>Deposit status: {{ deposit['deposit_status'] }}</p>
+
+  <p>Metadata</p>
+  <small>
+  <code>
+  {{ deposit }}
+  </code>
+  </p>
+  </small>
+  <hr />
+{% endfor %}
+
+
+{% endblock %}
