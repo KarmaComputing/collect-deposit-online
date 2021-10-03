@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% from "admin/admin-nav.jinja" import admin_nav %}
+{% from "admin/admin-buttons.jinja" import reschedule_booking_btn %}
 {% block body %}
 
 <h1>Collected Deposits</h1>
@@ -15,6 +16,8 @@
   <p>Customer mobile: {{ collected_deposit['customer_mobile'] or 'Not given' }}</p>
   <p>Email: {{ collected_deposit['customer_email'] }}</p>
   <p>Date requested: {{ collected_deposit['requested_date'] }}</p>
+
+  {{ reschedule_booking_btn(timestamp=collected_deposit['timestamp']) }}
 
   <p>Metadata</p>
   <small>

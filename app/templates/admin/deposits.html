@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
 {% from "admin/admin-nav.jinja" import admin_nav %}
+{% from "admin/admin-buttons.jinja" import reschedule_booking_btn %}
+
 {% block body %}
 
 <h1>Available Deposits</h1>
@@ -7,6 +9,8 @@
 
 
 <p>List of deposits which are available for charging.</p>
+<p>This means a person has given permission to be charged automatically as soon as
+their requested booking is confirmed.</p>
 
 <hr />
 
@@ -26,8 +30,7 @@
   <span id="charge-deposit-message"></span>
   <a href="/charge-deposit?payment_method_id={{ available_deposit['payment_method'] }}&stripe_customer_id={{ available_deposit['stripe_customer_id'] }}&timestamp={{ available_deposit['timestamp'] }}" id="charge-deposit" class="btn btn-primary">Confirm &amp; charge &pound;15 now</a>
 
-  <a href="/reschedule?timestamp={{ available_deposit['timestamp'] }}" id="reschedule-deposit" class="btn btn-warning">Reschedule</a>
-
+  {{ reschedule_booking_btn(timestamp=collected_deposit['timestamp']) }}
   <a href="{{ url_for('cancel_booking', timestamp=available_deposit['timestamp']) }} " id="cancel-booking" class="btn btn-danger">Cancel</a>
   <p>Metadata</p>
   <small>
