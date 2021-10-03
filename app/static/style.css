@@ -9,22 +9,31 @@ html {
   padding: 10px;
 }
 
-input[type=submit], .button {
+input[type=submit], .btn {
   display: block;
   margin-top: 40px;
   width: 304px;
   height: 36px;
-  background: #92c13b;
   border: 0px;
   color: white;
   font-size: 1em;
   width: 90%;
   max-width: 300px;
   text-decoration: none;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-input[type=submit]:hover, .button {
+.btn-primary {
+  background: #92c13b;
+}
+
+.btn-warning {
+  background: #f79d1c;
+}
+
+input[type=submit]:hover, .btn-primary {
   background: #91b946;
 }
 
