@@ -51,7 +51,7 @@ jobs:
           ssh dokku@$DOKKU_HOST -C "dokku config:set --no-restart ${{ secrets.DOKKU_APP_NAME }} SHARED_MOUNT_POINT=${{ secrets.SHARED_MOUNT_POINT }}"
           # Create shared mount point
           ssh dokku@$DOKKU_HOST -C "mkdir -p /home/dokku/shared-mount-collect-deposit-online"
-          ssh dokku@$DOKKU_HOST -C "dokku storage:mount collect-deposit-online ${{ secrets.HOST_SHARED_DIRECTORY }}:${{ secrets.SHARED_MOUNT_POINT }}"
+          ssh dokku@$DOKKU_HOST -C "dokku storage:mount collect-deposit-online ${{ secrets.HOST_SHARED_DIRECTORY }}:${{ secrets.SHARED_MOUNT_POINT }}" | true
 
 
       - name: Deploy to dokku
