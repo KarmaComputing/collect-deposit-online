@@ -30,7 +30,7 @@ their requested booking is confirmed.</p>
   <span id="charge-deposit-message"></span>
   <a href="/charge-deposit?payment_method_id={{ available_deposit['payment_method'] }}&stripe_customer_id={{ available_deposit['stripe_customer_id'] }}&timestamp={{ available_deposit['timestamp'] }}" id="charge-deposit" class="btn btn-primary">Confirm &amp; charge &pound;15 now</a>
 
-  {{ reschedule_booking_btn(timestamp=collected_deposit['timestamp']) }}
+  {{ reschedule_booking_btn(timestamp=available_deposit['timestamp']) }}
   <a href="{{ url_for('cancel_booking', timestamp=available_deposit['timestamp']) }} " id="cancel-booking" class="btn btn-danger">Cancel</a>
   <p>Metadata</p>
   <small>
