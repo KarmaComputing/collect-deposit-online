@@ -28,18 +28,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Deploy branch ${{ github.head_ref }} to dokku
+      - name: Deploy to dokku
         uses: idoberko2/dokku-deploy-github-action@v1
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
           dokku-host: ${{ secrets.DOKKU_HOST }}
           app-name: collect-deposit-online
-          git-push-flags: '--force'
           remote-branch: main
 
-      - name: Push to dokku
-        uses: dokku/github-action@v1.0.2
-        with:
-          git_remote_url: 'ssh://dokku@${{ secrets.DOKKU_HOST }}:22/collect-deposit-online'
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
-          branch: 'main'
