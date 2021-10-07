@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% from "admin/admin-nav.jinja" import admin_nav %}
+{% from "admin/admin-product.jinja" import display_product %}
+
+{% block body %}
+
+<h1>Products</h1>
+{{ admin_nav() }}
+
+
+<h3>Add/Update/Delete Products</h3>
+
+<ul>
+  <li><a href="{{ url_for('add_product') }}">Add Product</a></li>
+</ul>
+
+{% for product in products %}
+
+  {{ display_product(product) }}
+  <hr />
+{% endfor %}
+
+{% endblock %}

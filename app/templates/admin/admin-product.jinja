@@ -1,0 +1,17 @@
+{% macro display_product(metadata) -%}
+
+  <style>
+  .product-admin {
+    border: 2px solid #c75275;
+    padding: 15px;  
+  }
+  </style>
+
+  <div style="display:block" class="product-admin">
+    <span>{{ metadata['product_name'] }} </span><br />
+    Deposit Amount: &pound;{{ metadata['deposit_amount'] }}
+    <a href="" class="btn btn-primary inline">Edit</a>
+    <a href="" class="inline btn btn-danger">Delete</a>
+  </div>
+
+{%- endmacro %}

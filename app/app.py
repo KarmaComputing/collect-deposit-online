@@ -365,3 +365,40 @@ def refunded_deposits():
     return render_template(
         "admin/refunded-deposits.html", deposits=deposits
     )  # noqa: E501
+
+
+@app.route("/admin/products")
+@login_required
+def products():
+    """Products dashboard
+    Links to add/update/delete products
+    """
+    products_path = Path(SHARED_MOUNT_POINT, "products")
+    product_files = list(
+        filter(lambda y: y.is_file(), products_path.iterdir())
+    )  # noqa: E501
+    products = []
+    for path in product_files:
+        with open(path) as fp:
+            product = json.loads(fp.read())
+            products.append(product)
+    return render_template("admin/products.html", products=products)  # noqa: E501
+
+
+@app.route("/admin/add-product")
+@login_required
+def add_product():
+    """Add new product"""
+    if request.args.get("product_name") and request.args.get("deposit_amount"):
+        metadata = {}
+        metadata["product_name"] = request.args.get("product_name")
+        metadata["deposit_amount"] = request.args.get("deposit_amount")
+
+        filename = str(time.time_ns())
+        filePath = Path(SHARED_MOUNT_POINT, "products", filename)
+        Path.mkdir(filePath.parent, parents=True, exist_ok=True)
+        with open(filePath, "w") as fp:
+            fp.write(json.dumps(metadata))
+        flash("Product saved.")
+        return redirect(url_for("products"))
+    return render_template("admin/add-product.html")  # noqa: E501
