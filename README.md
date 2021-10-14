@@ -23,3 +23,7 @@ python app.wsgi
 ```
 
 http://127.0.0.1:5500/
+
+## Notes 
+When running locally, SHARED_MOUNT_POINT env can simply be set to any directory on your localhost because it's not running inside a container.
+
