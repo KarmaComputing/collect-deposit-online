@@ -31,7 +31,6 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 app = Flask(__name__)
 app.config["SECRET_KEY"] = SECRET_KEY
 
-breakpoint()
 
 # Initialize flask_saas
 def get_stripe_secret_key():
@@ -66,8 +65,10 @@ def get_stripe_connect_completed_status():
     return os.getenv("STRIPE_CONNECT_COMPLETED_STATUS")
 
 
-def set_stripe_connect_completed_status():
-    return os.getenv("STRIPE_CONNECT_COMPLETED_STATUS")
+def set_stripe_connect_completed_status(status: bool) -> bool:
+
+    os.environ["STRIPE_CONNECT_COMPLETED_STATUS"] = str(status)
+    return bool(os.environ["STRIPE_CONNECT_COMPLETED_STATUS"])
 
 
 Flask_SaaS(
@@ -109,6 +110,13 @@ def login():
 @login_required
 def admin():
     return render_template("admin/dashboard.html")
+
+
+@app.route("/admin/settings")
+@login_required
+def settings():
+
+    return render_template("admin/settings.html")
 
 
 @app.route("/")
