@@ -365,3 +365,44 @@ def refunded_deposits():
     return render_template(
         "admin/refunded-deposits.html", deposits=deposits
     )  # noqa: E501
+
+    # Initialize flask_saas
+    def get_stripe_secret_key():
+        return os.getenv("STRIPE_SECRET_KEY")
+
+    def get_stripe_business_profile():
+        return os.getenv("STRIPE_BUSINESS_PROFILE")
+
+    def get_stripe_connect_account():
+        return os.getenv("STRIPE_CONNECT_ACCOUNT")
+
+    def get_stripe_livemode():
+        return os.getenv("STRIPE_LIVEMODE")
+
+    def set_stripe_livemode():
+        return os.getenv("STRIPE_LIVEMODE")
+
+    def get_stripe_connect_account_id():
+        return os.getenv("STRIPE_CONNECT_ACCOUNT_ID")
+
+    def set_stripe_connect_account_id():
+        return os.getenv("STRIPE_CONNECT_ACCOUNT_ID")
+
+    def get_stripe_connect_completed_status():
+        return os.getenv("STRIPE_CONNECT_COMPLETED_STATUS")
+
+    def set_stripe_connect_completed_status():
+        return os.getenv("STRIPE_CONNECT_COMPLETED_STATUS")
+
+    Flask_SaaS(
+        app,
+        get_stripe_secret_key=get_stripe_secret_key,
+        get_stripe_business_profile=get_stripe_business_profile,
+        get_stripe_connect_account=get_stripe_connect_account,
+        get_stripe_livemode=get_stripe_livemode,
+        set_stripe_livemode=set_stripe_livemode,
+        get_stripe_connect_account_id=get_stripe_connect_account_id,
+        set_stripe_connect_account_id=set_stripe_connect_account_id,
+        get_stripe_connect_completed_status=get_stripe_connect_completed_status,
+        set_stripe_connect_completed_status=set_stripe_connect_completed_status,
+    )
