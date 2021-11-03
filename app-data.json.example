@@ -1,0 +1,11 @@
+{
+  "stripe_connect": {
+    "livemode": 1,
+    "account_id": "",
+    "completed_status": "",
+    "business_profile": {
+      "name": "ACME Corp",
+      "support_email": "help@example.com"
+    }
+  }
+}

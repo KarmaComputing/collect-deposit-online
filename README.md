@@ -7,6 +7,16 @@
 
 ## Setup
 
+Move app-data.json.example to your shared folder and rename it to app-data.json
+
+### What is `app-data.json` for?
+For storing app data which changes. It is used to store Stripe Connect data (e.g. Stripe Connect account id) and other data which is not stricly sensitive.
+
+This should really be a database but havins a file is sufficient for now.
+### What is `.env` for?
+    - It contains the API keys and other secrets that are needed to run the app.
+    - It is not stored in the repository, so you can move it to a shared folder and keep it private.
+
 ```
 python3 -m venv venv
 . venv/bin/activate

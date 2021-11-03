@@ -95,6 +95,20 @@ def login_required(f):
     return decorated_function
 
 
+def get_app_data() -> dict:
+    """
+    Returns the application data such as Stripe Connect account ID,
+    and if the application is in Stripe live or test mode.
+
+    It does not contain any sensitive data.
+    """
+    filename = "app-data.json"
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+    with open(filePath, "r") as fp:
+        settings = json.loads(fp.read())
+    return settings
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
@@ -114,8 +128,7 @@ def admin():
 
 @app.route("/admin/settings")
 @login_required
-def settings():
-
+def settings_page():
     return render_template("admin/settings.html")
 
 
