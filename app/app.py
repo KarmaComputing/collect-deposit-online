@@ -28,8 +28,8 @@ SHARED_MOUNT_POINT = os.getenv("SHARED_MOUNT_POINT")
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 
-myfootballapp = Flask(__name__)
-myfootballapp.config["SECRET_KEY"] = SECRET_KEY
+app = Flask(__name__)
+app.config["SECRET_KEY"] = SECRET_KEY
 
 breakpoint()
 
@@ -71,7 +71,7 @@ def set_stripe_connect_completed_status():
 
 
 Flask_SaaS(
-    app=myfootballapp,
+    app=app,
     get_stripe_secret_key=get_stripe_secret_key,
     get_stripe_business_profile=get_stripe_business_profile,
     get_stripe_connect_account=get_stripe_connect_account,
