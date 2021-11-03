@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% from "admin/admin-nav.jinja" import admin_nav %}
+{% from "admin/admin-buttons.jinja" import reschedule_booking_btn, cancel_booking_btn %}
+
+{% block body %}
+
+<h1>Settings</h1>
+{{ admin_nav() }}
+
+<h2><a href="">Connect to Stripe</a></h2>
+
+<h3>Use the menu above to manage deposits</h3>
+
+
+{% endblock %}
