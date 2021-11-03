@@ -366,6 +366,13 @@ def refunded_deposits():
         "admin/refunded-deposits.html", deposits=deposits
     )  # noqa: E501
 
+@app.route("/admin/settings")
+@login_required
+def settings():
+
+    return render_template(
+        "admin/settings.html") 
+
     # Initialize flask_saas
     def get_stripe_secret_key():
         return os.getenv("STRIPE_SECRET_KEY")
