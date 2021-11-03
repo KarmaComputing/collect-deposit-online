@@ -109,6 +109,13 @@ def get_app_data() -> dict:
     return settings
 
 
+def update_app_data(data: dict):
+    filename = "app-data.json"
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+    with open(filePath, "w") as fp:
+        fp.write(json.dumps(data))
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
