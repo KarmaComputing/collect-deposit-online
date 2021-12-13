@@ -2,7 +2,7 @@
 
 - Display items available for booking
 - Ask for time/date
-- Setup payment for later (authorise payment so can collect once serviceSTRIPE_API_KEY confirmed)
+- Setup payment for later (authorise payment so can collect once service confirmed)
 
 
 ## Setup
