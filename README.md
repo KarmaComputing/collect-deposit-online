@@ -2,7 +2,7 @@
 
 - Display items available for booking
 - Ask for time/date
-- Setup payment for later (authorise payment so can collect once service confirmed)
+- Setup payment for later (authorise payment so can collect once serviceSTRIPE_API_KEY confirmed)
 
 
 ## Setup
@@ -11,7 +11,8 @@
 python3 -m venv venv
 . venv/bin/activate
 pip install -r requirements.txt
-cp ./app/.env.example ./app/.env  # update with your stripe key
+cp ./app/.env.example ./app/.env  # Read the example before copying!
+# Update .env variable "STRIPE_API_KEY" with your Stripe "Secret key"
 ```
 
 ## Run
