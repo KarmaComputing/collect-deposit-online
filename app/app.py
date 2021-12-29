@@ -60,7 +60,16 @@ def admin():
 
 @app.route("/")
 def choose():
-    return render_template("choose.html", locale="es")
+    products_path = Path(SHARED_MOUNT_POINT, "products")
+    product_files = list(
+        filter(lambda y: y.is_file(), products_path.iterdir())
+    )  # noqa: E501
+    products = []
+    for path in product_files:
+        with open(path) as fp:
+            product = json.loads(fp.read())
+            products.append(product)
+    return render_template("choose.html", locale="es", products=products)
 
 
 @app.route("/request-date-time", methods=["GET", "POST"])
