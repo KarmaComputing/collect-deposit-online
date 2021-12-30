@@ -60,7 +60,7 @@ def admin():
 
 @app.route("/")
 def choose():
-    return render_template("choose.html", locale="es", products=get_products())
+    return render_template("choose.html", products=get_products())
 
 def get_products():
     products_path = Path(SHARED_MOUNT_POINT, "products")
@@ -378,12 +378,22 @@ def refunded_deposits():
     )  # noqa: E501
 
 
-@app.route("/admin/products")
+@app.route("/admin/products", methods=["GET", "POST"])
 @login_required
 def products():
     """Products dashboard
     Links to add/update/delete products
     """
+    if request.method == 'POST':
+        if request.form['delete'] == 'delete':
+            try_remove = True
+            product_id = request.form['product_id']
+            if remove_product(product_id):
+                is_removed = True
+                return render_template("admin/products.html", products=get_products())  # noqa: E501
+            else:
+                is_removed = False
+                return render_template("admin/products.html", products=get_products())  # noqa: E501
     return render_template("admin/products.html", products=get_products())  # noqa: E501
 
 
@@ -392,11 +402,12 @@ def products():
 def add_product():
     """Add new product"""
     if request.args.get("product_name") and request.args.get("deposit_amount"):
+        filename = str(time.time_ns())
         metadata = {}
         metadata["product_name"] = request.args.get("product_name")
         metadata["deposit_amount"] = request.args.get("deposit_amount")
+        metadata["product_id"] = filename
 
-        filename = str(time.time_ns())
         filePath = Path(SHARED_MOUNT_POINT, "products", filename)
         Path.mkdir(filePath.parent, parents=True, exist_ok=True)
         with open(filePath, "w") as fp:
@@ -404,3 +415,18 @@ def add_product():
         flash("Product saved.")
         return redirect(url_for("products"))
     return render_template("admin/add-product.html")  # noqa: E501
+
+
+def remove_product(product_id):
+    products_path = Path(SHARED_MOUNT_POINT, "products")
+    product_files = list(
+        filter(lambda y: y.is_file(), products_path.iterdir())
+    )  # noqa: E501
+    target_product = (str(products_path) + '/' + product_id)
+    if os.path.isfile(target_product):
+        print("FOUND PRODUCT FOR DELETION " + product_id + " @ " + (str(products_path) + '/' + product_id))
+        try:
+            os.remove(target_product)
+            return True
+        except Exception as e:
+            return False

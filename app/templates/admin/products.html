@@ -13,7 +13,14 @@
 <ul>
   <li><a href="{{ url_for('add_product') }}">Add Product</a></li>
 </ul>
-
+{% if try_remove == true %}
+    {% if is_removed == true %}
+    <div>"{{ metadata['product_name'] }}" removed from server</div>
+    {% else %}
+    <div>CRITICAL ERROR! {{ metadata['product_name'] }} cannot be deleted or does not exist</div>
+    {% endif %}
+{% else %}
+{% endif %}
 {% for product in products %}
 
   {{ display_product(product) }}

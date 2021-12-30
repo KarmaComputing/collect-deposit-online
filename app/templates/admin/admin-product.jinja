@@ -3,15 +3,21 @@
   <style>
   .product-admin {
     border: 2px solid #c75275;
-    padding: 15px;  
+    padding: 15px;
   }
   </style>
+
+
 
   <div style="display:block" class="product-admin">
     <span>{{ metadata['product_name'] }} </span><br />
     Deposit Amount: &pound;{{ metadata['deposit_amount'] }}
     <a href="" class="btn btn-primary inline">Edit</a>
-    <a href="" class="inline btn btn-danger">Delete</a>
+    <a href="" class="inline btn btn-danger" value="del" name="del" >Delete {{metadata['product_id']}}</a>
+    <form method="post" action="/admin/products">
+        <input type="hidden" id="product_id" name="product_id" value="{{metadata['product_id']}}">
+        <input type="submit" name="delete" value="delete">
+    </form>
   </div>
 
 {%- endmacro %}
