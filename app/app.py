@@ -60,6 +60,9 @@ def admin():
 
 @app.route("/")
 def choose():
+    return render_template("choose.html", locale="es", products=get_products())
+
+def get_products():
     products_path = Path(SHARED_MOUNT_POINT, "products")
     product_files = list(
         filter(lambda y: y.is_file(), products_path.iterdir())
@@ -69,8 +72,7 @@ def choose():
         with open(path) as fp:
             product = json.loads(fp.read())
             products.append(product)
-    return render_template("choose.html", locale="es", products=products)
-
+    return products
 
 @app.route("/request-date-time", methods=["GET", "POST"])
 def set_date_time():
@@ -382,16 +384,7 @@ def products():
     """Products dashboard
     Links to add/update/delete products
     """
-    products_path = Path(SHARED_MOUNT_POINT, "products")
-    product_files = list(
-        filter(lambda y: y.is_file(), products_path.iterdir())
-    )  # noqa: E501
-    products = []
-    for path in product_files:
-        with open(path) as fp:
-            product = json.loads(fp.read())
-            products.append(product)
-    return render_template("admin/products.html", products=products)  # noqa: E501
+    return render_template("admin/products.html", products=get_products())  # noqa: E501
 
 
 @app.route("/admin/add-product")
