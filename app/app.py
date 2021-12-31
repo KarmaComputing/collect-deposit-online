@@ -385,7 +385,7 @@ def products():
     Links to add/update/delete products
     """
     if request.method == 'POST':
-        if request.form['Delete'] == 'Delete':
+        if request.form.get('Delete') == 'Delete':
             try_remove = True
             product_id = request.form['product_id']
             if remove_product(product_id):
@@ -394,11 +394,11 @@ def products():
             else:
                 is_removed = False
                 return render_template("admin/products.html", products=get_products())  # noqa: E501
-        elif request.form['Edit'] == 'Edit':
+        elif request.form.get('Edit') == 'Edit':
             product_id = request.form['product_id']
             new_name = request.form['new_name']
             if edit_product(product_id, new_name):
-                return render_template("admin/products.html", products=get_products())  # noqa: E501
+                edit_success(new_name)
     return render_template("admin/products.html", products=get_products())  # noqa: E501
 
 
@@ -439,6 +439,14 @@ def edit_product(product_id, new_name):
             return True
         except Exception as e:
             return False
+
+
+@app.route("/admin/edit-success")
+@login_required
+def edit_success(product):
+    time.sleep(1)
+    return render_template("admin/edit-success.html",product=product)
+
 
 def remove_product(product_id):
     products_path = Path(SHARED_MOUNT_POINT, "products")

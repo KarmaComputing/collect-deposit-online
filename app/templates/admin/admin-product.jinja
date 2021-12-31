@@ -12,8 +12,10 @@
   <div style="display:block" class="product-admin">
     <form method="post" action="/admin/products">
     <span>{{ metadata['product_name'] }} </span><br />
-    Deposit Amount: &pound;{{ metadata['deposit_amount'] }}<br />
-        <input name="new_name" id="new_name">
+    Deposit Amount: &pound;{{ metadata['deposit_amount'] }}<br /><br />
+
+        <label for="new_name">Change product name</label><br />
+        <input type="text" class="form-control" name="new_name" id="new_name">
         <input type="hidden" id="product_id" name="product_id" value="{{metadata['product_id']}}">
         <input type="submit" class="btn btn-primary inline" name="Edit" value="Edit">
         <input type="submit" class="btn btn-danger" name="Delete" value="Delete">
