@@ -26,8 +26,11 @@ python app.wsgi
 ## How to run tests
 ```
 . venv/bin/activate
-python -m pytest
+python -m pytest -vv
 ```
+
+> Note the `-vv` gives more usefule verbose output (needed
+  when tests fail. Wish this was the default personally!)
 
 Example running the tests:
 ```
