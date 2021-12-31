@@ -9,6 +9,12 @@ def client():
         yield client
 
 
+def login(client, password="changeme"):
+    return client.post(
+        "/login", data=dict(password=password), follow_redirects=True
+    )  # noqa: E501
+
+
 def test_get_homepage_200_ok(client):
     req = client.get("/")
     assert req.status_code == 200
@@ -17,6 +23,13 @@ def test_get_homepage_200_ok(client):
 def test_get_login_200_ok(client):
     req = client.get("/login")
     assert req.status_code == 200
+
+
+def test_post_login_200_ok(client):
+    req = login(
+        client,
+    )
+    assert b"Deposit Collection System" in req.data
 
 
 def test_get_reqest_date_time_200_ok(client):
