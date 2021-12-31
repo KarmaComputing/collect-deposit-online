@@ -385,7 +385,7 @@ def products():
     Links to add/update/delete products
     """
     if request.method == 'POST':
-        if request.form['delete'] == 'delete':
+        if request.form['Delete'] == 'Delete':
             try_remove = True
             product_id = request.form['product_id']
             if remove_product(product_id):
@@ -393,6 +393,11 @@ def products():
                 return render_template("admin/products.html", products=get_products())  # noqa: E501
             else:
                 is_removed = False
+                return render_template("admin/products.html", products=get_products())  # noqa: E501
+        elif request.form['Edit'] == 'Edit':
+            product_id = request.form['product_id']
+            new_name = request.form['new_name']
+            if edit_product(product_id, new_name):
                 return render_template("admin/products.html", products=get_products())  # noqa: E501
     return render_template("admin/products.html", products=get_products())  # noqa: E501
 
@@ -416,6 +421,24 @@ def add_product():
         return redirect(url_for("products"))
     return render_template("admin/add-product.html")  # noqa: E501
 
+def edit_product(product_id, new_name):
+    products_path = Path(SHARED_MOUNT_POINT, "products")
+    product_files = list(
+        filter(lambda y: y.is_file(), products_path.iterdir())
+    )  # noqa: E501
+    target_product = (str(products_path) + '/' + product_id)
+    if os.path.isfile(target_product):
+        try:
+            file = open(target_product, "r")
+            jsonObject = json.load(file)
+            file.close()
+            jsonObject["product_name"] = str(new_name)
+            file = open(target_product, "w")
+            json.dump(jsonObject, file)
+            file.close()
+            return True
+        except Exception as e:
+            return False
 
 def remove_product(product_id):
     products_path = Path(SHARED_MOUNT_POINT, "products")
