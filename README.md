@@ -23,6 +23,29 @@ export FLASK_DEBUG=1
 python app.wsgi
 ```
 
+## How to run tests
+```
+. venv/bin/activate
+python -m pytest
+```
+
+Example running the tests:
+```
+(venv) (base) (add-tests)$ python -m pytest
+====================== test session starts ======================
+platform linux -- Python 3.9.5, pytest-6.2.5, py-1.11.0, pluggy-1.0.0
+rootdir: /home/username/collect-deposit-online
+collected 1 item
+
+tests/test_app.py .                                       [100%]
+
+======================= 1 passed in 0.20s =======================
+```
+
+### Where are the tests?
+
+In the `tests` directory.
+
 http://127.0.0.1:5500/
 
 ## Notes 
