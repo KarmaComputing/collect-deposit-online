@@ -15,12 +15,14 @@
 </ul>
 {% if try_remove == true %}
     {% if is_removed == true %}
-    <div>"{{ metadata['product_name'] }}" removed from server</div>
+    <div>Product successfully deleted from server</div>
     {% else %}
-    <div>CRITICAL ERROR! {{ metadata['product_name'] }} cannot be deleted or does not exist</div>
+    <div>CRITICAL ERROR! Product cannot be deleted or does not exist!</div>
     {% endif %}
 {% else %}
 {% endif %}
+<br />
+
 {% for product in products %}
 
   {{ display_product(product) }}

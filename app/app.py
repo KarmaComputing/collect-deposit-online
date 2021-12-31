@@ -390,10 +390,10 @@ def products():
             product_id = request.form['product_id']
             if remove_product(product_id):
                 is_removed = True
-                return render_template("admin/products.html", products=get_products())  # noqa: E501
+                return render_template("admin/products.html", products=get_products(), is_removed=is_removed, try_remove=try_remove)  # noqa: E501
             else:
                 is_removed = False
-                return render_template("admin/products.html", products=get_products())  # noqa: E501
+                return render_template("admin/products.html", products=get_products(), is_removed=is_removed, try_remove=try_remove)  # noqa: E501
         elif request.form.get('Edit') == 'Edit':
             product_id = request.form['product_id']
             new_name = request.form['new_name']
