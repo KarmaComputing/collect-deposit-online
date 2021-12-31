@@ -97,6 +97,32 @@ def test_get_admin_refunded_deposits_302_redirect(client):
     assert req.status_code == 302
 
 
+def test_admin_get_collected_deposits(client):
+    req = login(client)
+    req = client.get("/admin/collected-deposits")
+    assert (
+        b"List of deposits which have been charged successfully." in req.data
+    )  # noqa: E501
+
+
+def test_admin_get_cancelled_bookings(client):
+    req = login(client)
+    req = client.get("/admin/cancelled-bookings")
+    assert b"List of bookings which have been cancelled." in req.data
+
+
+def test_admin_get_deposits(client):
+    req = login(client)
+    req = client.get("/admin/deposits")
+    assert b"There are no new deposit requests" in req.data
+
+
+def test_admin_get_refunded_deposits(client):
+    req = login(client)
+    req = client.get("/admin/refunded-deposits")
+    assert b"List of deposits which have been refunded." in req.data
+
+
 def test_get_admin_302_redirect(client):
     req = client.get("/admin")
     assert req.status_code == 302
