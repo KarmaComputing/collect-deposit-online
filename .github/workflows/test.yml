@@ -14,6 +14,7 @@ jobs:
   test:
 
     runs-on: ubuntu-20.04
+    environment: testing-non-container
 
     steps:
     - uses: actions/checkout@v2
@@ -25,7 +26,7 @@ jobs:
       run: |
         pwd
         ls -l
-        mkdir /usr/src/app/storage
+        mkdir ./app/storage
         cp ./app/.env.example ./app/.env
         python -m pip install --upgrade pip
         pip install flake8 pytest
