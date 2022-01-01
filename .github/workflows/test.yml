@@ -44,4 +44,4 @@ jobs:
         STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
         SHARED_MOUNT_POINT: ${{ secrets.SHARED_MOUNT_POINT }}
       run: |
-        python -m pytest
+        python -m pytest -vv
