@@ -71,7 +71,11 @@ def get_products():
     for path in product_files:
         with open(path) as fp:
             product = json.loads(fp.read())
-            products.append(product)
+            print(path)
+            if validate_product(path):
+                products.append(product)
+            else:
+                print("Product at " + str(path) + "is not active. Skipping.")
     return products
 
 @app.route("/request-date-time", methods=["GET", "POST"])
@@ -384,13 +388,14 @@ def products():
     """Products dashboard
     Links to add/update/delete products
     """
+    products=get_products()
     if request.method == 'POST':
         if request.form.get('Delete') == 'Delete':
             try_remove = True
             product_id = request.form['product_id']
             if remove_product(product_id):
                 is_removed = True
-                return render_template("admin/products.html", products=get_products(), is_removed=is_removed, try_remove=try_remove)  # noqa: E501
+                return redirect(url_for("products"))  # noqa: E501
             else:
                 is_removed = False
                 return render_template("admin/products.html", products=get_products(), is_removed=is_removed, try_remove=try_remove)  # noqa: E501
@@ -412,7 +417,7 @@ def add_product():
         metadata["product_name"] = request.args.get("product_name")
         metadata["deposit_amount"] = request.args.get("deposit_amount")
         metadata["product_id"] = filename
-
+        metadata["active"] = "1"
         filePath = Path(SHARED_MOUNT_POINT, "products", filename)
         Path.mkdir(filePath.parent, parents=True, exist_ok=True)
         with open(filePath, "w") as fp:
@@ -427,7 +432,7 @@ def edit_product(product_id, new_name):
         filter(lambda y: y.is_file(), products_path.iterdir())
     )  # noqa: E501
     target_product = (str(products_path) + '/' + product_id)
-    if os.path.isfile(target_product):
+    if validate_product(target_product):
         try:
             file = open(target_product, "r")
             jsonObject = json.load(file)
@@ -454,10 +459,32 @@ def remove_product(product_id):
         filter(lambda y: y.is_file(), products_path.iterdir())
     )  # noqa: E501
     target_product = (str(products_path) + '/' + product_id)
-    if os.path.isfile(target_product):
+    if validate_product(target_product):
         print("FOUND PRODUCT FOR DELETION " + product_id + " @ " + (str(products_path) + '/' + product_id))
         try:
-            os.remove(target_product)
+            file = open(target_product, "r")
+            jsonObject = json.load(file)
+            file.close()
+            jsonObject["active"] = "0"
+            file = open(target_product, "w")
+            json.dump(jsonObject, file)
+            file.close()
             return True
         except Exception as e:
             return False
+
+def validate_product(target_product):
+    if os.path.isfile(target_product):
+        try:
+            file = open(target_product, "r")
+            jsonObject = json.load(file)
+            file.close()
+            if (jsonObject["active"] == "1"):
+                return True
+            else:
+                return False
+        except Exception as e:
+            print(e)
+    else:
+        print("File " + target_product + "does not exist")
+        return False
