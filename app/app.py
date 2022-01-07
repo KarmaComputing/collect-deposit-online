@@ -21,11 +21,10 @@ from .email import (
 )
 from functools import wraps
 
-load_dotenv(verbose=True)  # take environment variables from .env.
+load_dotenv(verbose=True)  # Take environment variables from .env.
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
 SHARED_MOUNT_POINT = os.getenv("SHARED_MOUNT_POINT")
 SECRET_KEY = os.getenv("SECRET_KEY")
-
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = SECRET_KEY
@@ -37,7 +36,6 @@ def login_required(f):
         if "logged-in" not in session:
             return redirect(url_for("login", next=request.url))
         return f(*args, **kwargs)
-
     return decorated_function
 
 
@@ -62,6 +60,7 @@ def admin():
 def choose():
     return render_template("choose.html", products=get_products())
 
+
 def get_products():
     products_path = Path(SHARED_MOUNT_POINT, "products")
     product_files = list(
@@ -75,8 +74,9 @@ def get_products():
             if validate_product(path):
                 products.append(product)
             else:
-                print("Product at " + str(path) + "is not active. Skipping.")
+                print("Product at " + str(path) + " is not active. Skipping.")
     return products
+
 
 @app.route("/request-date-time", methods=["GET", "POST"])
 def set_date_time():
@@ -191,7 +191,6 @@ def collected_deposits():
             deposit_intent = json.loads(fp.read())
             if deposit_intent["deposit_status"] == "collected":
                 collected_deposits.append(deposit_intent)
-
     return render_template(
         "admin/deposits-collected.html", collected_deposits=collected_deposits
     )  # noqa: E501
@@ -247,7 +246,6 @@ def charge_deposit():
         fp.seek(0)
         fp.write(json.dumps(metadata))
         fp.truncate()
-
     # Note: There may be no need to stripe.PaymentIntent.capture it manually
     # See https://stripe.com/docs/api/payment_intents/confirm?lang=python
     notify_deposit_collected(metadata)
@@ -266,7 +264,6 @@ def reschedule_deposit():
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath) as fp:
         metadata = json.loads(fp.read())
-
     return render_template("admin/reschedule.html", metadata=metadata)
 
 
@@ -277,14 +274,12 @@ def save_rescheduled_desposit():
     requested_time = request.args.get("time")
     requested_date = request.args.get("date")
     filename = request.args.get("timestamp", None)
-
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath, "r+") as fp:
         metadata = json.loads(fp.read())
         metadata["requested_date"] = requested_date
         metadata["requested_time"] = requested_time
         metadata["requested_product"] = requested_product
-
         fp.seek(0)
         fp.write(json.dumps(metadata))
         fp.truncate()
@@ -303,12 +298,10 @@ def save_rescheduled_desposit():
 @login_required
 def cancel_booking():
     filename = request.args.get("timestamp", None)
-
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath, "r+") as fp:
         metadata = json.loads(fp.read())
         metadata["deposit_status"] = "cancelled"
-
         fp.seek(0)
         fp.write(json.dumps(metadata))
         fp.truncate()
@@ -320,7 +313,7 @@ def cancel_booking():
             Has now been cancelled."""
     send_booking_cancelled_email(
         to=metadata["customer_email"], content=message
-    )  # noqa: E501
+    )                                                      # noqa: E501
     flash("Booking has been cancelled")
     return redirect(url_for("cancelled_bookings"))
 
@@ -330,12 +323,10 @@ def cancel_booking():
 def refund_deposit():
     filename = request.args.get("timestamp", None)
     filePath = Path(SHARED_MOUNT_POINT, filename)
-
     with open(filePath, "r+") as fp:
         metadata = json.loads(fp.read())
-        # Perform refund
         stripe.api_key = STRIPE_API_KEY
-        try:
+        try:                                              # Perform refund
             stripe_refund = stripe.Refund.create(
                 payment_intent=metadata["stripe_payment_intent_id"]
             )
@@ -358,7 +349,6 @@ def refund_deposit():
                 flash("Charge has already been refunded")
             else:
                 raise
-
     return redirect(url_for("refunded_deposits"))
 
 
@@ -376,7 +366,6 @@ def refunded_deposits():
             deposit_intent = json.loads(fp.read())
             if deposit_intent["deposit_status"] == "refunded":
                 deposits.append(deposit_intent)
-
     return render_template(
         "admin/refunded-deposits.html", deposits=deposits
     )  # noqa: E501
@@ -385,9 +374,7 @@ def refunded_deposits():
 @app.route("/admin/products", methods=["GET", "POST"])
 @login_required
 def products():
-    """Products dashboard
-    Links to add/update/delete products
-    """
+    # Products dashboard - Links to add/update/delete products
     products=get_products()
     if request.method == 'POST':
         if request.form.get('Delete') == 'Delete':
@@ -410,7 +397,7 @@ def products():
 @app.route("/admin/add-product")
 @login_required
 def add_product():
-    """Add new product"""
+    #Add new product
     if request.args.get("product_name") and request.args.get("deposit_amount"):
         filename = str(time.time_ns())
         metadata = {}
@@ -425,6 +412,8 @@ def add_product():
         flash("Product saved.")
         return redirect(url_for("products"))
     return render_template("admin/add-product.html")  # noqa: E501
+
+
 
 def edit_product(product_id, new_name):
     products_path = Path(SHARED_MOUNT_POINT, "products")
@@ -445,7 +434,7 @@ def edit_product(product_id, new_name):
         except Exception as e:
             return False
 
-
+            
 @app.route("/admin/edit-success")
 @login_required
 def edit_success(product):
@@ -460,7 +449,7 @@ def remove_product(product_id):
     )  # noqa: E501
     target_product = (str(products_path) + '/' + product_id)
     if validate_product(target_product):
-        print("FOUND PRODUCT FOR DELETION " + product_id + " @ " + (str(products_path) + '/' + product_id))
+        print("FOUND PRODUCT FOR DELETION ",product_id," @ ",(str(products_path),'/',product_id))
         try:
             file = open(target_product, "r")
             jsonObject = json.load(file)
@@ -472,6 +461,7 @@ def remove_product(product_id):
             return True
         except Exception as e:
             return False
+
 
 def validate_product(target_product):
     if os.path.isfile(target_product):
@@ -486,5 +476,5 @@ def validate_product(target_product):
         except Exception as e:
             print(e)
     else:
-        print("File " + target_product + "does not exist")
+        print("File ",target_product," does not exist")
         return False
