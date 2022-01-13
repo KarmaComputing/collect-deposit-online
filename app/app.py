@@ -20,6 +20,7 @@ from .email import (
     send_deposit_refund_email,
 )
 from functools import wraps
+import logging
 
 load_dotenv(verbose=True)  # Take environment variables from .env.
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
@@ -36,6 +37,7 @@ def login_required(f):
         if "logged-in" not in session:
             return redirect(url_for("login", next=request.url))
         return f(*args, **kwargs)
+
     return decorated_function
 
 
@@ -61,7 +63,8 @@ def choose():
     return render_template("choose.html", products=get_products())
 
 
-def get_products():
+def get_products(include_archived=False):
+    """Get all products exluding archivedn by default"""
     products_path = Path(SHARED_MOUNT_POINT, "products")
     product_files = list(
         filter(lambda y: y.is_file(), products_path.iterdir())
@@ -70,11 +73,8 @@ def get_products():
     for path in product_files:
         with open(path) as fp:
             product = json.loads(fp.read())
-            print(path)
-            if validate_product(path):
+            if product["active"] == "1":
                 products.append(product)
-            else:
-                print("Product at " + str(path) + " is not active. Skipping.")
     return products
 
 
@@ -313,7 +313,7 @@ def cancel_booking():
             Has now been cancelled."""
     send_booking_cancelled_email(
         to=metadata["customer_email"], content=message
-    )                                                      # noqa: E501
+    )  # noqa: E501
     flash("Booking has been cancelled")
     return redirect(url_for("cancelled_bookings"))
 
@@ -326,7 +326,7 @@ def refund_deposit():
     with open(filePath, "r+") as fp:
         metadata = json.loads(fp.read())
         stripe.api_key = STRIPE_API_KEY
-        try:                                              # Perform refund
+        try:  # Perform refund
             stripe_refund = stripe.Refund.create(
                 payment_intent=metadata["stripe_payment_intent_id"]
             )
@@ -374,30 +374,49 @@ def refunded_deposits():
 @app.route("/admin/products", methods=["GET", "POST"])
 @login_required
 def products():
-    # Products dashboard - Links to add/update/delete products
-    products=get_products()
-    if request.method == 'POST':
-        if request.form.get('Delete') == 'Delete':
-            try_remove = True
-            product_id = request.form['product_id']
-            if remove_product(product_id):
-                is_removed = True
-                return redirect(url_for("products"))  # noqa: E501
-            else:
-                is_removed = False
-                return render_template("admin/products.html", products=get_products(), is_removed=is_removed, try_remove=try_remove)  # noqa: E501
-        elif request.form.get('Edit') == 'Edit':
-            product_id = request.form['product_id']
-            new_name = request.form['new_name']
-            if edit_product(product_id, new_name):
-                edit_success(new_name)
-    return render_template("admin/products.html", products=get_products())  # noqa: E501
+    """List products in admin dashboard"""
+    products = get_products()
+    return render_template("admin/products.html", products=products)  # noqa: E501
+
+
+@app.route("/admin/product/delete/<int:product_id>", methods=["GET"])
+@login_required
+def delete_product(product_id: int):
+    """Delete a product"""
+    try:
+        product_id = int(product_id)
+        remove_product(product_id)
+    except Exception as e:
+        logging.error(f"Error deleting produt: {e}")
+    flash(f"Product {product_id} deleted")
+    return redirect(url_for("products"))
+
+
+@app.route("/admin/product/edit/<int:product_id>", methods=["GET", "POST"])
+@login_required
+def edit_product(product_id: int):
+    product = get_product(product_id)
+
+    if request.method == "POST":
+        product_name = request.form.get("product_name")
+        deposit_amount = request.form.get("deposit_amount")
+        # Update the product name and deposit amount
+        product["product_name"] = product_name
+        product["deposit_amount"] = int(deposit_amount)
+
+        # Save
+        update_product(product_id, product)
+
+        flash("Product updated")
+        return redirect(url_for("products"))
+
+    return render_template("admin/edit-product.html", product=product)  # noqa: E501
 
 
 @app.route("/admin/add-product")
 @login_required
 def add_product():
-    #Add new product
+    """Add new product"""
     if request.args.get("product_name") and request.args.get("deposit_amount"):
         filename = str(time.time_ns())
         metadata = {}
@@ -414,67 +433,46 @@ def add_product():
     return render_template("admin/add-product.html")  # noqa: E501
 
 
-
-def edit_product(product_id, new_name):
-    products_path = Path(SHARED_MOUNT_POINT, "products")
-    product_files = list(
-        filter(lambda y: y.is_file(), products_path.iterdir())
-    )  # noqa: E501
-    target_product = (str(products_path) + '/' + product_id)
-    if validate_product(target_product):
-        try:
-            file = open(target_product, "r")
-            jsonObject = json.load(file)
-            file.close()
-            jsonObject["product_name"] = str(new_name)
-            file = open(target_product, "w")
-            json.dump(jsonObject, file)
-            file.close()
-            return True
-        except Exception as e:
-            return False
-
-            
 @app.route("/admin/edit-success")
 @login_required
 def edit_success(product):
     time.sleep(1)
-    return render_template("admin/edit-success.html",product=product)
+    return render_template("admin/edit-success.html", product=product)
 
 
 def remove_product(product_id):
+    product = get_product(product_id)
+    product["active"] = "0"
+    update_product(product_id, product)
+
+
+def get_product(product_id: int, include_archived=False) -> dict:
+    """Return a single products metadata"""
+    product_id = int(product_id)
+
     products_path = Path(SHARED_MOUNT_POINT, "products")
-    product_files = list(
-        filter(lambda y: y.is_file(), products_path.iterdir())
-    )  # noqa: E501
-    target_product = (str(products_path) + '/' + product_id)
-    if validate_product(target_product):
-        print("FOUND PRODUCT FOR DELETION ",product_id," @ ",(str(products_path),'/',product_id))
-        try:
-            file = open(target_product, "r")
-            jsonObject = json.load(file)
-            file.close()
-            jsonObject["active"] = "0"
-            file = open(target_product, "w")
-            json.dump(jsonObject, file)
-            file.close()
-            return True
-        except Exception as e:
-            return False
+    product_full_path = Path(products_path, str(product_id))
+    try:
+        with open(product_full_path, "r") as fp:
+            product = json.load(fp)
+            if product["active"] == "1":
+                return product
+    except FileNotFoundError as e:
+        logging.error(f"Product id file not found {product_id}. {e}")
+        raise
+    except Exception as e:
+        logging.error(f"Unable to get product id not found {product_id}. {e}")
+        raise
 
 
-def validate_product(target_product):
-    if os.path.isfile(target_product):
-        try:
-            file = open(target_product, "r")
-            jsonObject = json.load(file)
-            file.close()
-            if (jsonObject["active"] == "1"):
-                return True
-            else:
-                return False
-        except Exception as e:
-            print(e)
-    else:
-        print("File ",target_product," does not exist")
-        return False
+def update_product(product_id: int, updated_product) -> dict:
+    """Update an existing product"""
+    products_path = Path(SHARED_MOUNT_POINT, "products")
+    product_full_path = Path(products_path, str(product_id))
+    try:
+        with open(product_full_path, "w") as fp:
+            json.dump(updated_product, fp)
+
+        return updated_product
+    except Exception as e:
+        logging.error("Could not update product: {product_id}. {e}")

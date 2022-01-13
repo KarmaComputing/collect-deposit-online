@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+{% from "admin/admin-nav.jinja" import admin_nav %}
+
+{% block body %}
+
+<h1>Edit Product</h1>
+{{ admin_nav() }}
+
+<style>
+    label {
+        display: block;
+        margin-bottom: 2em;
+    }
+</style>
+
+<form action="{{ url_for('edit_product', product_id=product["product_id"]) }}" method="POST">
+    <label for="product_name">Product / Service name:
+    <input name="product_name" value="{{ product['product_name'] }}" required></label> 
+
+    <label for="deposit_amount">Deposit Amount &pound;
+    <input name="deposit_amount" type="number" value="{{ product['deposit_amount'] }}" required /></label>
+    <small>The amount of deposit required in pence. E.g. To charge &pound;15 deposit, enter: 1500</small>
+
+    <input type="submit" class="btn btn-primary" />
+</form>
+
+{% endblock %}

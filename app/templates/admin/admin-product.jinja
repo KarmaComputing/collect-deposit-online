@@ -11,15 +11,12 @@
 
   <div style="display:block" class="product-admin">
     <form method="post" action="/admin/products">
-    <span>{{ metadata['product_name'] }} </span><br />
-    Deposit Amount: &pound;{{ metadata['deposit_amount'] }}<br /><br />
-
-        <label for="new_name">Change product name</label><br />
-        <input type="text" class="form-control" name="new_name" id="new_name">
-        <input type="hidden" id="product_id" name="product_id" value="{{metadata['product_id']}}">
-        <input type="submit" class="btn btn-primary inline" name="Edit" value="Edit">
-        <input type="submit" class="btn btn-danger" name="Delete" value="Delete">
+    <h4>{{ metadata['product_name'] }}</h4>
+      Deposit Amount: &pound;{{ metadata['deposit_amount'] }}<br /><br />
+      <a href="/admin/product/edit/{{ metadata['product_id'] }}" class="btn btn-primary inline">Edit</a>
+      <a href="/admin/product/delete/{{ metadata['product_id'] }}" class="btn btn-danger inline">Delete</a>
     </form>
   </div>
 
 {%- endmacro %}
+
