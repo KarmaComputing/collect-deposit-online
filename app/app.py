@@ -433,13 +433,6 @@ def add_product():
     return render_template("admin/add-product.html")  # noqa: E501
 
 
-@app.route("/admin/edit-success")
-@login_required
-def edit_success(product):
-    time.sleep(1)
-    return render_template("admin/edit-success.html", product=product)
-
-
 def remove_product(product_id):
     product = get_product(product_id)
     product["active"] = "0"
