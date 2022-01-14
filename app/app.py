@@ -365,3 +365,12 @@ def refunded_deposits():
     return render_template(
         "admin/refunded-deposits.html", deposits=deposits
     )  # noqa: E501
+
+"""Filters"""
+
+"""Currency format filter"""
+#{{ deposit | currencyFormat }} - Need to work on deposit variable
+@app.template_filter("currency")
+def currencyFormat(value):
+    value = float(value) / 100
+    return "£{:,.2f}".format(value)
