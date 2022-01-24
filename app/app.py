@@ -216,11 +216,22 @@ def cancelled_bookings():
         "admin/cancelled-bookings.html", deposits=deposits
     )  # noqa: E501
 
+    # Amount of deposit needs to be retreived from product file(ln231)
+    # ln452 get_product() fetches product metadata
+
+    # 1) Retreive products
+    # 2) Get deposit_amount value from retreived product
+    #
 
 @app.route("/admin/charge-deposit")
 @login_required
 def charge_deposit():
     """Charge the request to pay a deposit."""
+    product_id = 1643040471939778534
+    product = get_product(product_id)
+    deposit = product["deposit_amount"]
+    return str(deposit)
+
     payment_method_id = request.args.get("payment_method_id", None)
     stripe_customer_id = request.args.get("stripe_customer_id", None)
     filename = request.args.get("timestamp", None)
