@@ -221,7 +221,7 @@ def cancelled_bookings():
 
     # 1) Retreive products
     # 2) Get deposit_amount value from retreived product
-    #
+    # How to pass in previous request? Go through the workflow and pass value to charge_deposit route
 
 @app.route("/admin/charge-deposit")
 @login_required
