@@ -274,7 +274,7 @@ def notify_deposit_collected(metadata):
 @app.route("/admin/reschedule")
 @login_required
 def reschedule_deposit():
-    filename = request.args.get("", None)
+    filename = request.args.get("timestamp", None)
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath) as fp:
         metadata = json.loads(fp.read())
@@ -287,7 +287,7 @@ def save_rescheduled_desposit():
     requested_product = request.args.get("product")
     requested_time = request.args.get("time")
     requested_date = request.args.get("date")
-    filename = request.args.get("", None)
+    filename = request.args.get("timestamp", None)
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath, "r+") as fp:
         metadata = json.loads(fp.read())
