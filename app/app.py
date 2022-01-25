@@ -141,7 +141,7 @@ def stripe_success():
     with open(filePath, "w") as fp:
 
         metadata = session.metadata
-        #metadata["product_id"] =
+        #metadata["product_id"] = request.args.get("product") TODO: Create get request to transfer chosen product ID to success.html
         metadata["timestamp"] = filename
         metadata["payment_method"] = payment_method
         metadata["setup_intent"] = setup_intent.id
@@ -224,6 +224,8 @@ def cancelled_bookings():
     # 1) Retreive products
     # 2) Get deposit_amount value from retreived product
     # How to pass in previous request? Go through the workflow and pass value to charge_deposit route
+
+    # TODO - Get product_id from url args 
 
 @app.route("/admin/charge-deposit", methods=["GET", "POST"])
 @login_required
