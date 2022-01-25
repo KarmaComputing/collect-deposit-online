@@ -30,7 +30,8 @@ we'll confirm your booking. A deposit will be taken after your booking request i
     <select name="product" id="products">
       <option value="">--Please choose an option--</option>
       {% for product in products %}
-        <option value={{product.product_name}}>{{product.product_name}}</option>
+      <option value={{product.product_id}} name="product_id">testing - {{product.product_id}}</option>
+      <option value={{product.product_name}}>{{product.product_name}}</option>
       {% endfor %}
     </select>
 
