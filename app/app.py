@@ -124,7 +124,7 @@ def stripe_success():
     stripe.api_key = STRIPE_API_KEY
     stripe_session_id = request.args.get("session_id")
     session = stripe.checkout.Session.retrieve(stripe_session_id)
-    print(session)
+    print("SESSION DATA: ",session)
     setup_intent = stripe.SetupIntent.retrieve(session.setup_intent)
     # Create customer
     stripe_customer = stripe.Customer.create(
@@ -139,7 +139,9 @@ def stripe_success():
     filename = str(time.time_ns())
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath, "w") as fp:
+
         metadata = session.metadata
+        #metadata["product_id"] =
         metadata["timestamp"] = filename
         metadata["payment_method"] = payment_method
         metadata["setup_intent"] = setup_intent.id
@@ -223,11 +225,12 @@ def cancelled_bookings():
     # 2) Get deposit_amount value from retreived product
     # How to pass in previous request? Go through the workflow and pass value to charge_deposit route
 
-@app.route("/admin/charge-deposit")
+@app.route("/admin/charge-deposit", methods=["GET", "POST"])
 @login_required
 def charge_deposit():
     """Charge the request to pay a deposit."""
-    product_id = 1643040471939778534
+    return product
+    product_id = request.args.get("product_id")
     product = get_product(product_id)
     deposit = product["deposit_amount"]
     return str(deposit)
@@ -238,7 +241,7 @@ def charge_deposit():
 
     stripe.api_key = STRIPE_API_KEY
     payment_intent = stripe.PaymentIntent.create(
-        amount=1500,
+        amount=deposit,
         currency="gbp",
         payment_method_types=["card"],
         payment_method=payment_method_id,
@@ -271,7 +274,7 @@ def notify_deposit_collected(metadata):
 @app.route("/admin/reschedule")
 @login_required
 def reschedule_deposit():
-    filename = request.args.get("timestamp", None)
+    filename = request.args.get("", None)
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath) as fp:
         metadata = json.loads(fp.read())
@@ -284,7 +287,7 @@ def save_rescheduled_desposit():
     requested_product = request.args.get("product")
     requested_time = request.args.get("time")
     requested_date = request.args.get("date")
-    filename = request.args.get("timestamp", None)
+    filename = request.args.get("", None)
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath, "r+") as fp:
         metadata = json.loads(fp.read())

@@ -8,7 +8,7 @@
 <h2>Chosen product: <span id="product-chosen"></span></h2>
 
 <form action="/deposit">
-  <label for="date">Date <input type="date" id="start" name="date" min="2021-01-01" max="2021-12-31"></label>
+  <label for="date">Date <input type="date" id="start" name="date" min="2021-01-01" max="2022-12-31"></label>
   <label for="time">Time <input name="time" type="time" required /></label>
 
   <input name="product" type="hidden" value="" id="product-chosen-hidden" />
@@ -31,10 +31,10 @@ var month = today.getMonth()+1; //January is 0!
 var year = today.getFullYear();
  if(day<10){
         day='0'+day
-    } 
+    }
     if(month<10){
         month='0'+month
-    } 
+    }
 today = year+'-'+month+'-'+day;
 document.getElementById("start").setAttribute("min", today);
 </script>
