@@ -87,7 +87,10 @@ def set_date_time():
 
 @app.route("/deposit", methods=["GET", "POST"])
 def deposit():
-    return render_template("deposit.html")
+    product_id = request.form.get("product_id")
+    product = get_product(product_id)
+    product_name = product["product_name"]
+    return render_template("deposit.html"product_name=product_name)
 
 
 @app.route("/create-checkout-session", methods=["GET", "POST"])
@@ -103,6 +106,7 @@ def create_checkout_session():
     customer_mobile = request.form.get("mobile", None)
 
     metadata = {
+        "product_id": product_id,
         "requested_product": requested_product,
         "requested_date": requested_date,
         "requested_time": requested_time,
@@ -238,7 +242,6 @@ def charge_deposit():
     product_id = request.args.get("product_id")
     product = get_product(product_id)
     deposit = product["deposit_amount"]
-    return str(deposit)
 
     payment_method_id = request.args.get("payment_method_id", None)
     stripe_customer_id = request.args.get("stripe_customer_id", None)
