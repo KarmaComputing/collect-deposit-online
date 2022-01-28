@@ -32,12 +32,12 @@ There are no new deposit requests. See <a href="{{ url_for('collected_deposits')
   <p>Customer name: {{ available_deposit['customer_name'] or 'Not given' }}</p>
   <p>Customer mobile: {{ available_deposit['customer_mobile'] or 'Not given' }}</p>
   <p>Email: {{ available_deposit['customer_email'] }}</p>
-  <p>Date requested: {{ available_deposit['requested_date'] }}</p>
+  <p>Date requested: {{ available_deposit['requested_date'] }}</p>deposit = product["deposit_amount"]
   <p>Time requested: {{ available_deposit['requested_time'] }}</p>
 
 
   <span id="charge-deposit-message"></span>
-  <a href="{{ url_for('charge_deposit', payment_method_id=available_deposit['payment_method'], stripe_customer_id=available_deposit['stripe_customer_id'], timestamp=available_deposit['timestamp']) }}" id="charge-deposit" class="btn btn-primary">Confirm &amp; charge {{available_deposit["deposit_amount"]}} now</a>
+  <a href="{{ url_for('charge_deposit', payment_method_id=available_deposit['payment_method'], stripe_customer_id=available_deposit['stripe_customer_id'], timestamp=available_deposit['timestamp'], requested_product=available_deposit['requested_product']) }}" id="charge-deposit" class="btn btn-primary">Confirm &amp; charge {{available_deposit["deposit_amount"]}} now</a>
 
   {{ reschedule_booking_btn(timestamp=available_deposit['timestamp']) }}
 
