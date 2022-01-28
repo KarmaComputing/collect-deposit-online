@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block body %}
 
-<h1>Deposit:</h1>
+<h1>Deposit: {{product_name}}</h1>
 
 <p>Please reserve your booking by making a small deposit of &pound;15.</p>
 
@@ -17,7 +17,6 @@
   <label for="mobile">Mobile <input name="mobile" id="mobile" /></label>
   <input type="submit" value="Checkout" class="btn btn-primary">
   <input name="product" type="hidden" value="" id="product-chosen-hidden" />
-  {{product_id}}
   <input name="date" type="hidden" value="" id="date-chosen-hidden" />
   <input name="time" type="hidden" value="" id="time-chosen-hidden" />
 

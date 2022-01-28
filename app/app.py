@@ -80,24 +80,24 @@ def get_products(include_archived=False):
 
 @app.route("/request-date-time", methods=["GET", "POST"])
 def set_date_time():
-    product_id = request.form.get("product_id")
+    product_id = request.form.get("product")
     print(product_id)
     return render_template("request-date-time.html",product_id=product_id)
 
 
 @app.route("/deposit", methods=["GET", "POST"])
 def deposit():
-    product_id = request.form.get("product_id")
+    product_id = request.args.get("product")
     product = get_product(product_id)
     product_name = product["product_name"]
-    return render_template("deposit.html"product_name=product_name)
+    return render_template("deposit.html", product_name=product_name)
 
 
 @app.route("/create-checkout-session", methods=["GET", "POST"])
 def create_checkout_session():
     stripe.api_key = STRIPE_API_KEY
 
-    product_id = request.args.get("product_id")
+    product_id = request.args.get("product")
     requested_product = request.form.get("product")
     requested_time = request.form.get("time")
     requested_date = request.form.get("date")
@@ -468,9 +468,9 @@ def remove_product(product_id):
     update_product(product_id, product)
 
 
-def get_product(product_id: int, include_archived=False) -> dict:
+def get_product(product_id, include_archived=False) -> dict:
     """Return a single products metadata"""
-    product_id = int(product_id)
+    #product_id = int(product_id)
 
     products_path = Path(SHARED_MOUNT_POINT, "products")
     product_full_path = Path(products_path, str(product_id))
