@@ -34,10 +34,10 @@ There are no new deposit requests. See <a href="{{ url_for('collected_deposits')
   <p>Email: {{ available_deposit['customer_email'] }}</p>
   <p>Date requested: {{ available_deposit['requested_date'] }}</p>
   <p>Time requested: {{ available_deposit['requested_time'] }}</p>
-  
+
 
   <span id="charge-deposit-message"></span>
-  <a href="{{ url_for('charge_deposit', payment_method_id=available_deposit['payment_method'], stripe_customer_id=available_deposit['stripe_customer_id'], timestamp=available_deposit['timestamp']) }}" id="charge-deposit" class="btn btn-primary">Confirm &amp; charge {{product[deposit_amount]}} now</a>
+  <a href="{{ url_for('charge_deposit', payment_method_id=available_deposit['payment_method'], stripe_customer_id=available_deposit['stripe_customer_id'], timestamp=available_deposit['timestamp']) }}" id="charge-deposit" class="btn btn-primary">Confirm &amp; charge {{available_deposit["deposit_amount"]}} now</a>
 
   {{ reschedule_booking_btn(timestamp=available_deposit['timestamp']) }}
 
@@ -54,6 +54,7 @@ There are no new deposit requests. See <a href="{{ url_for('collected_deposits')
 {% endfor %}
 
   <script>
+
   chargeBtn = document.getElementById("charge-deposit");
   chargeBtn.addEventListener("click", function(e) {
     e.target.style.display = "none";

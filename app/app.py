@@ -97,16 +97,20 @@ def deposit():
 def create_checkout_session():
     stripe.api_key = STRIPE_API_KEY
 
-    product_id = request.args.get("product")
+
     requested_product = request.form.get("product")
     requested_time = request.form.get("time")
     requested_date = request.form.get("date")
     customer_email = request.form.get("email", None)
     customer_name = request.form.get("name", None)
     customer_mobile = request.form.get("mobile", None)
+    product = get_product(requested_product)
+    deposit_amount = product["deposit_amount"]
+    product_id = product["product_id"]
 
     metadata = {
         "product_id": product_id,
+        "deposit_amount" : deposit_amount,
         "requested_product": requested_product,
         "requested_date": requested_date,
         "requested_time": requested_time,
@@ -239,7 +243,7 @@ def cancelled_bookings():
 def charge_deposit():
     """Charge the request to pay a deposit."""
 
-    product_id = request.args.get("product_id")
+    product_id = request.args.get("requested_product")
     product = get_product(product_id)
     deposit = product["deposit_amount"]
 
