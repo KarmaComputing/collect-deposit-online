@@ -5,6 +5,15 @@
 - Setup payment for later (authorise payment so can collect once service confirmed)
 
 
+# Definitions / Naming / nomenclature
+
+- **product** - An item or service
+
+- **requested_product** - A product booking *request* by the customer stating their *wish* to book a product at a given date/time.
+  - Note a `requested_product` may be rejected (e.g. if not available)
+  - Note a `requested_product` is not confirmed until the admin has confirmed it
+  - Note a `requested_product` may require a deposit (though not all products require a deposit)
+
 ## Setup
 
 ```
