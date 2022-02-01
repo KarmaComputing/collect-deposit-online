@@ -339,7 +339,6 @@ def cancel_booking():
 @app.route("/admin/refund-deposit")
 @login_required
 def refund_deposit():
-    breakpoint()
     filename = request.args.get("timestamp", None)
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath, "r+") as fp:
