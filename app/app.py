@@ -60,6 +60,7 @@ def admin():
 
 @app.route("/")
 def choose():
+
     return render_template("choose.html", products=get_products())
 
 
@@ -80,7 +81,7 @@ def get_products(include_archived=False):
 
 @app.route("/request-date-time", methods=["GET", "POST"])
 def set_date_time():
-    product_id = request.form.get("product")
+    product_id = request.form.get("product_id")
     print(product_id)
     return render_template("request-date-time.html",product_id=product_id)
 
@@ -89,8 +90,7 @@ def set_date_time():
 def deposit():
     product_id = request.args.get("product")
     product = get_product(product_id)
-    product_name = product["product_name"]
-    return render_template("deposit.html", product_name=product_name)
+    return render_template("deposit.html", product=product)
 
 
 @app.route("/create-checkout-session", methods=["GET", "POST"])
@@ -98,20 +98,20 @@ def create_checkout_session():
     stripe.api_key = STRIPE_API_KEY
 
 
-    requested_product = request.form.get("product")
+    product_id = request.form.get("product")
     requested_time = request.form.get("time")
     requested_date = request.form.get("date")
     customer_email = request.form.get("email", None)
     customer_name = request.form.get("name", None)
     customer_mobile = request.form.get("mobile", None)
-    product = get_product(requested_product)
+    product = get_product(product_id)
     deposit_amount = product["deposit_amount"]
-    product_id = product["product_id"]
+    product_name = product["product_name"]
 
     metadata = {
         "product_id": product_id,
+        "product_name": product_name,
         "deposit_amount" : deposit_amount,
-        "requested_product": requested_product,
         "requested_date": requested_date,
         "requested_time": requested_time,
         "customer_email": customer_email,
@@ -150,7 +150,6 @@ def stripe_success():
     filename = str(time.time_ns())
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath, "w") as fp:
-
         metadata = session.metadata
         metadata["product_id"] = request.args.get("product_id") #TODO: Create get request to transfer chosen product ID to success.html
         metadata["timestamp"] = filename
@@ -229,21 +228,14 @@ def cancelled_bookings():
         "admin/cancelled-bookings.html", deposits=deposits
     )  # noqa: E501
 
-    # Amount of deposit needs to be retreived from product file(ln231)
-    # ln452 get_product() fetches product metadata
-
-    # 1) Retreive products
-    # 2) Get deposit_amount value from retreived product
-    # How to pass in previous request? Go through the workflow and pass value to charge_deposit route
-
-    # TODO - Get product_id from url args
+    # get_product() fetches product metadata, takes product_id as argument
 
 @app.route("/admin/charge-deposit", methods=["GET", "POST"])
 @login_required
 def charge_deposit():
     """Charge the request to pay a deposit."""
 
-    product_id = request.args.get("requested_product")
+    product_id = request.args.get("product_id")
     product = get_product(product_id)
     deposit = product["deposit_amount"]
 
@@ -269,6 +261,7 @@ def charge_deposit():
         metadata = json.loads(fp.read())
         metadata["deposit_status"] = "collected"
         metadata["stripe_payment_intent_id"] = payment_intent.id
+        metadata["prodiuct_id"] = product_id
         fp.seek(0)
         fp.write(json.dumps(metadata))
         fp.truncate()
@@ -296,7 +289,7 @@ def reschedule_deposit():
 @app.route("/admin/save-rescheduled-deposit")
 @login_required
 def save_rescheduled_desposit():
-    requested_product = request.args.get("product")
+    product_id = request.args.get("product_id")
     requested_time = request.args.get("time")
     requested_date = request.args.get("date")
     filename = request.args.get("timestamp", None)
@@ -305,7 +298,7 @@ def save_rescheduled_desposit():
         metadata = json.loads(fp.read())
         metadata["requested_date"] = requested_date
         metadata["requested_time"] = requested_time
-        metadata["requested_product"] = requested_product
+        metadata["product"] = requested_product
         fp.seek(0)
         fp.write(json.dumps(metadata))
         fp.truncate()
@@ -362,7 +355,7 @@ def refund_deposit():
             fp.write(json.dumps(metadata))
             fp.truncate()
             message = f"""Booking deposit refund started:
-                    Service/Product: {metadata['requested_product']}
+                    Service/Product: {metadata['duct']}
                     Date: {metadata['requested_date']}
                     Time: {metadata['requested_time']}.
                     Is being refunded."""
