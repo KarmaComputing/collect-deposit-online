@@ -79,14 +79,14 @@ def get_products(include_archived=False):
     return products
 
 
-@app.route("/request-date-time", methods=["GET", "POST"])
+@app.route("/request-date-time")
 def set_date_time():
     product_id = request.form.get("product_id")
     print(product_id)
     return render_template("request-date-time.html", product_id=product_id)
 
 
-@app.route("/deposit", methods=["GET", "POST"])
+@app.route("/deposit")
 def deposit():
     product_id = request.args.get("product")
     product = get_product(product_id)
@@ -96,19 +96,18 @@ def deposit():
 @app.route("/create-checkout-session", methods=["GET", "POST"])
 def create_checkout_session():
     stripe.api_key = STRIPE_API_KEY
-
-    product_id = request.form.get("product")
+    requested_product_id = request.form.get("product")
     requested_time = request.form.get("time")
     requested_date = request.form.get("date")
     customer_email = request.form.get("email", None)
     customer_name = request.form.get("name", None)
     customer_mobile = request.form.get("mobile", None)
-    product = get_product(product_id)
+    product = get_product(requested_product_id)
     deposit_amount = product["deposit_amount"]
     product_name = product["product_name"]
 
     metadata = {
-        "product_id": product_id,
+        "requested_product_id": requested_product_id,
         "product_name": product_name,
         "deposit_amount": deposit_amount,
         "requested_date": requested_date,
@@ -150,9 +149,6 @@ def stripe_success():
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath, "w") as fp:
         metadata = session.metadata
-        metadata["product_id"] = request.args.get(
-            "product_id"
-        )  # TODO: Create get request to transfer chosen product ID to success.html
         metadata["timestamp"] = filename
         metadata["payment_method"] = payment_method
         metadata["setup_intent"] = setup_intent.id
@@ -236,9 +232,8 @@ def cancelled_bookings():
 @login_required
 def charge_deposit():
     """Charge the request to pay a deposit."""
-
-    product_id = request.args.get("product_id")
-    product = get_product(product_id)
+    requested_product_id = request.args.get("requested_product_id")
+    product = get_product(requested_product_id)
     deposit = product["deposit_amount"]
 
     payment_method_id = request.args.get("payment_method_id", None)
@@ -263,7 +258,7 @@ def charge_deposit():
         metadata = json.loads(fp.read())
         metadata["deposit_status"] = "collected"
         metadata["stripe_payment_intent_id"] = payment_intent.id
-        metadata["prodiuct_id"] = product_id
+        metadata["requested_product_id"] = requested_product_id
         fp.seek(0)
         fp.write(json.dumps(metadata))
         fp.truncate()
@@ -291,7 +286,7 @@ def reschedule_deposit():
 @app.route("/admin/save-rescheduled-deposit")
 @login_required
 def save_rescheduled_desposit():
-    product_id = request.args.get("product_id")
+    requested_product_id = request.args.get("product_id")
     requested_time = request.args.get("time")
     requested_date = request.args.get("date")
     filename = request.args.get("timestamp", None)
@@ -300,14 +295,13 @@ def save_rescheduled_desposit():
         metadata = json.loads(fp.read())
         metadata["requested_date"] = requested_date
         metadata["requested_time"] = requested_time
-        metadata["product"] = requested_product
         fp.seek(0)
         fp.write(json.dumps(metadata))
         fp.truncate()
     message = f"""Booking has been rescheduled to:
             Date: {metadata['requested_date']}
             Time: {metadata['requested_time']}
-            Service/Product: {metadata['requested_product']}"""
+            Service/Product: {metadata['product_name']}"""
     send_booking_rescheduled_email(
         to=metadata["customer_email"], content=message
     )  # noqa: E501
@@ -328,7 +322,7 @@ def cancel_booking():
         fp.truncate()
 
     message = f"""Booking has been cancelled:
-            Service/Product: {metadata['requested_product']}
+            Service/Product: {metadata['requested_product_id']}
             Date: {metadata['requested_date']}
             Time: {metadata['requested_time']}.
             Has now been cancelled."""
@@ -342,10 +336,17 @@ def cancel_booking():
 @app.route("/admin/refund-deposit")
 @login_required
 def refund_deposit():
+    breakpoint()
     filename = request.args.get("timestamp", None)
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath, "r+") as fp:
         metadata = json.loads(fp.read())
+        # Don't attemp refund if no stripe_payment_intent_id present
+        if "stripe_payment_intent_id" not in metadata:
+            msg = "No stripe_payment_intent_id found for this deposit, so cannot perform refund."
+            flash(msg)
+            return redirect(url_for("refunded_deposits"))
+
         stripe.api_key = STRIPE_API_KEY
         try:  # Perform refund
             stripe_refund = stripe.Refund.create(
@@ -357,7 +358,7 @@ def refund_deposit():
             fp.write(json.dumps(metadata))
             fp.truncate()
             message = f"""Booking deposit refund started:
-                    Service/Product: {metadata['duct']}
+                    Service/Product: {metadata['requested_product_id']}
                     Date: {metadata['requested_date']}
                     Time: {metadata['requested_time']}.
                     Is being refunded."""

@@ -11,6 +11,7 @@ An email notification will automatically be sent.</p>
 
 <form action="{{ url_for('save_rescheduled_desposit') }}">
   <div id="fieldset">
+    Product/Service: {{ metadata['product_name'] }} <br /><br />
     Name: {{ metadata['customer_name'] }}
     <br />
     <br />
@@ -28,8 +29,6 @@ An email notification will automatically be sent.</p>
 
   <br />
   <br />
-  <label for="product">Product <input name="product" value="{{ metadata['requested_product'] }}" /></label>
-
   <input type="submit" class="btn btn-primary" />
   <hr />
   <p>Metadata</p>
