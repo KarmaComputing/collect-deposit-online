@@ -22,6 +22,11 @@ from .email import (
 from functools import wraps
 import logging
 
+PYTHON_LOG_LEVEL = os.getenv("PYTHON_LOG_LEVEL", "DEBUG")
+
+log = logging.getLogger()
+log.setLevel(PYTHON_LOG_LEVEL)
+
 load_dotenv(verbose=True)  # Take environment variables from .env.
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
 SHARED_MOUNT_POINT = os.getenv("SHARED_MOUNT_POINT")
@@ -82,7 +87,6 @@ def get_products(include_archived=False):
 @app.route("/request-date-time")
 def set_date_time():
     product_id = request.form.get("product_id")
-    print(product_id)
     return render_template("request-date-time.html", product_id=product_id)
 
 
@@ -136,7 +140,7 @@ def stripe_success():
     stripe.api_key = STRIPE_API_KEY
     stripe_session_id = request.args.get("session_id")
     session = stripe.checkout.Session.retrieve(stripe_session_id)
-    print("SESSION DATA: ", session)
+    log.debug(f"Session data: {session}")
     setup_intent = stripe.SetupIntent.retrieve(session.setup_intent)
     # Create customer
     stripe_customer = stripe.Customer.create(
@@ -158,7 +162,7 @@ def stripe_success():
         metadata["stripe_customer_id"] = stripe_customer.id
         metadata["deposit_status"] = "available_for_collection"
         fp.write(json.dumps(metadata))
-    print(session.metadata)
+    log.debug(session.metadata)
     return render_template("success.html")
 
 
@@ -411,7 +415,7 @@ def delete_product(product_id: int):
         product_id = int(product_id)
         remove_product(product_id)
     except Exception as e:
-        logging.error(f"Error deleting produt: {e}")
+        log.error(f"Error deleting produt: {e}")
     flash(f"Product {product_id} deleted")
     return redirect(url_for("products"))
 
@@ -481,10 +485,10 @@ def get_product(product_id, include_archived=False) -> dict:
             if product["active"] == "1":
                 return product
     except FileNotFoundError as e:
-        logging.error(f"Product id file not found {product_id}. {e}")
+        log.error(f"Product id file not found {product_id}. {e}")
         raise
     except Exception as e:
-        logging.error(f"Unable to get product id not found {product_id}. {e}")
+        log.error(f"Unable to get product id not found {product_id}. {e}")
         raise
 
 
@@ -498,4 +502,4 @@ def update_product(product_id: int, updated_product) -> dict:
 
         return updated_product
     except Exception as e:
-        logging.error("Could not update product: {product_id}. {e}")
+        log.error("Could not update product: {product_id}. {e}")
