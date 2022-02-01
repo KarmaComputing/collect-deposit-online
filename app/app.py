@@ -89,11 +89,14 @@ def set_date_time():
 @app.route("/deposit")
 def deposit():
     product_id = request.args.get("product")
+    if product_id is None:
+        flash("Product must be selected but was not present.")
+        return redirect(url_for("choose"))
     product = get_product(product_id)
     return render_template("deposit.html", product=product)
 
 
-@app.route("/create-checkout-session", methods=["GET", "POST"])
+@app.route("/create-checkout-session", methods=["POST"])
 def create_checkout_session():
     stripe.api_key = STRIPE_API_KEY
     requested_product_id = request.form.get("product")
