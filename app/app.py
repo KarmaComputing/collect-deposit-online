@@ -83,7 +83,7 @@ def get_products(include_archived=False):
 def set_date_time():
     product_id = request.form.get("product_id")
     print(product_id)
-    return render_template("request-date-time.html",product_id=product_id)
+    return render_template("request-date-time.html", product_id=product_id)
 
 
 @app.route("/deposit", methods=["GET", "POST"])
@@ -96,7 +96,6 @@ def deposit():
 @app.route("/create-checkout-session", methods=["GET", "POST"])
 def create_checkout_session():
     stripe.api_key = STRIPE_API_KEY
-
 
     product_id = request.form.get("product")
     requested_time = request.form.get("time")
@@ -111,7 +110,7 @@ def create_checkout_session():
     metadata = {
         "product_id": product_id,
         "product_name": product_name,
-        "deposit_amount" : deposit_amount,
+        "deposit_amount": deposit_amount,
         "requested_date": requested_date,
         "requested_time": requested_time,
         "customer_email": customer_email,
@@ -135,7 +134,7 @@ def stripe_success():
     stripe.api_key = STRIPE_API_KEY
     stripe_session_id = request.args.get("session_id")
     session = stripe.checkout.Session.retrieve(stripe_session_id)
-    print("SESSION DATA: ",session)
+    print("SESSION DATA: ", session)
     setup_intent = stripe.SetupIntent.retrieve(session.setup_intent)
     # Create customer
     stripe_customer = stripe.Customer.create(
@@ -151,7 +150,9 @@ def stripe_success():
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath, "w") as fp:
         metadata = session.metadata
-        metadata["product_id"] = request.args.get("product_id") #TODO: Create get request to transfer chosen product ID to success.html
+        metadata["product_id"] = request.args.get(
+            "product_id"
+        )  # TODO: Create get request to transfer chosen product ID to success.html
         metadata["timestamp"] = filename
         metadata["payment_method"] = payment_method
         metadata["setup_intent"] = setup_intent.id
@@ -229,6 +230,7 @@ def cancelled_bookings():
     )  # noqa: E501
 
     # get_product() fetches product metadata, takes product_id as argument
+
 
 @app.route("/admin/charge-deposit", methods=["GET", "POST"])
 @login_required
@@ -467,7 +469,6 @@ def remove_product(product_id):
 
 def get_product(product_id, include_archived=False) -> dict:
     """Return a single products metadata"""
-    #product_id = int(product_id)
 
     products_path = Path(SHARED_MOUNT_POINT, "products")
     product_full_path = Path(products_path, str(product_id))
