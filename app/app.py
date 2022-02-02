@@ -70,8 +70,7 @@ def set_date_time():
 
 @app.route("/deposit", methods=["GET", "POST"])
 def deposit():
-    deposit = session["deposit"]
-    return render_template("deposit.html", )                                      #"""TODO - Will need to pass chosen product metadata to this page, to display price dynamically.
+    return render_template("deposit.html")                                      #"""TODO - Will need to pass chosen product metadata to this page, to display price dynamically.
 
 
 @app.route("/create-checkout-session", methods=["GET", "POST"])
