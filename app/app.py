@@ -167,16 +167,17 @@ def get_products(include_archived=False):
 
 @app.route("/request-date-time")
 def set_date_time():
-    product_id = request.form.get("product_id")
-    return render_template("request-date-time.html", product_id=product_id)
+    product_id = request.args.get("product_id")
+    product = get_product(product_id)
+    return render_template("request-date-time.html", product=product)
 
 
 @app.route("/deposit")
 def deposit():
-    product_id = request.args.get("product")
+    product_id = request.args.get("product_id")
     if product_id is None:
         flash("Product must be selected but was not present.")
-        return redirect(url_for("choose"))
+        # return redirect(url_for("choose"))
     product = get_product(product_id)
     return render_template("deposit.html", product=product)
 
@@ -184,7 +185,7 @@ def deposit():
 @app.route("/create-checkout-session", methods=["POST"])
 def create_checkout_session():
     stripe.api_key = STRIPE_API_KEY
-    requested_product_id = request.form.get("product")
+    requested_product_id = request.form.get("product_id")
     requested_time = request.form.get("time")
     requested_date = request.form.get("date")
     customer_email = request.form.get("email", None)

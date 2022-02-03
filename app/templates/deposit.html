@@ -16,7 +16,7 @@
   <br />
   <label for="mobile">Mobile <input name="mobile" id="mobile" /></label>
   <input type="submit" value="Checkout" class="btn btn-primary">
-  <input name="product" type="hidden" value="" id="product-chosen-hidden" />
+  <input name="product_id" type="hidden" value="{{ product['product_id'] }}" id="product-chosen-hidden" />
   <input name="date" type="hidden" value="" id="date-chosen-hidden" />
   <input name="time" type="hidden" value="" id="time-chosen-hidden" />
 
@@ -26,10 +26,6 @@
 <script>
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
-
-const product = urlParams.get('product')
-document.querySelector("#product-chosen-hidden").value = product;
-console.log(product);
 
 const date = urlParams.get('date')
 document.querySelector("#date-chosen-hidden").value = date;

@@ -27,7 +27,7 @@ we'll confirm your booking. A deposit will be taken after your booking request i
 <form action="/request-date-time">
   <div id="fieldset">
     <label for="products">Select service:</label>
-    <select name="product" id="products">
+    <select name="product_id" id="products">
       <option value="">--Please choose an option--</option>
       {% for product in products %}
       <option value="{{ product.product_id }}">{{product.product_name}}</option>
@@ -35,7 +35,7 @@ we'll confirm your booking. A deposit will be taken after your booking request i
     </select>
 
     <br />
-    <input id="submit-chosen-treatment" type="submit" class="btn btn-primary" />
+    <input id="submit-chosen-treatment" type="submit" class="btn btn-primary" value="Submit" />
   </div>
 </form>
 
