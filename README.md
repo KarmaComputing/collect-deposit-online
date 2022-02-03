@@ -47,6 +47,11 @@ python app.wsgi
 . venv/bin/activate
 python -m pytest -vv
 ```
+or
+
+```
+./run-tests.sh
+```
 
 > Note the `-vv` gives more usefule verbose output (needed
   when tests fail. Wish this was the default personally!)
