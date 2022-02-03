@@ -37,14 +37,14 @@ def test_get_reqest_date_time_200_ok(client):
     assert req.status_code == 200
 
 
-def test_get_deposit_200_ok(client):
+def test_get_deposit_without_product_302_ok(client):
     req = client.get("/deposit")
-    assert req.status_code == 200
-
-
-def test_get_create_checkout_session_302_redirect(client):
-    req = client.get("/create-checkout-session")
     assert req.status_code == 302
+
+
+def test_get_create_checkout_session_405_error_method_not_allowed(client):
+    req = client.get("/create-checkout-session")
+    assert req.status_code == 405
 
 
 def test_get_cancel_302_redirect(client):

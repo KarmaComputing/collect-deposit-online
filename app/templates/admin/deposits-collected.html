@@ -11,7 +11,7 @@
 <hr />
 
 {% for collected_deposit in collected_deposits %}
-  <p>Service: {{ collected_deposit['requested_product'] }}</p>
+  <p>Service/Product: {{ collected_deposit['product_name'] }}</p>
   <p>Customer name: {{ collected_deposit['customer_name'] or 'Not given' }}</p>
   <p>Customer mobile: {{ collected_deposit['customer_mobile'] or 'Not given' }}</p>
   <p>Email: {{ collected_deposit['customer_email'] }}</p>
