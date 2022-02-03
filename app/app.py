@@ -1,3 +1,4 @@
+from fileinput import filename
 from flask import (
     Flask,
     render_template,
@@ -39,11 +40,15 @@ app.config["SECRET_KEY"] = SECRET_KEY
 
 # Initialize flask_saas
 def get_stripe_secret_key():
-    return os.getenv("STRIPE_SECRET_KEY")
+    return os.getenv("STRIPE_API_KEY")
 
 
 def get_stripe_business_profile():
-    return os.getenv("STRIPE_BUSINESS_PROFILE")
+    business_profile = {
+        "name": os.getenv("STRIPE_BUSINESS_PROFILE_NAME"),
+        "email": os.getenv("STRIPE_BUSINESS_EMAIL"),
+    }
+    return business_profile
 
 
 def get_stripe_connect_account():
@@ -59,11 +64,22 @@ def set_stripe_livemode():
 
 
 def get_stripe_connect_account_id():
-    return os.getenv("STRIPE_CONNECT_ACCOUNT_ID")
+    filename = "stripe_connect_account_id.txt"
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+
+    with open(filePath) as fp:
+        account_id = fp.read()
+    breakpoint()
+    return account_id
 
 
-def set_stripe_connect_account_id():
-    return os.getenv("STRIPE_CONNECT_ACCOUNT_ID")
+def set_stripe_connect_account_id(account_id):
+    filename = "stripe_connect_account_id.txt"
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+
+    with open(filePath, "w") as fp:
+        fp.write(account_id)
+    return account_id
 
 
 def get_stripe_connect_completed_status():
