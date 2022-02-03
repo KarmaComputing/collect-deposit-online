@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% from "admin/admin-nav.jinja" import admin_nav %}
+{% from "admin/admin-product.jinja" import display_product %}
+
+{% block body %}
+
+<h1>Products</h1>
+{{ admin_nav() }}
+
+
+<h3>Add/Update/Delete Products</h3>
+
+<ul>
+  <li><a href="{{ url_for('add_product') }}">Add Product</a></li>
+</ul>
+{% if try_remove == true %}
+    {% if is_removed == true %}
+    <div>Product successfully deleted from server</div>
+    {% else %}
+    <div>CRITICAL ERROR! Product cannot be deleted or does not exist!</div>
+    {% endif %}
+{% else %}
+{% endif %}
+<br />
+
+{% for product in products %}
+
+  {{ display_product(product) }}
+  <hr />
+{% endfor %}
+
+{% endblock %}
