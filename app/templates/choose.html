@@ -21,17 +21,17 @@
 
 <h1>Book Now</h1>
 
-<p>Book your service now. You can choose the date and time, 
+<p>Book your service now. You can choose the date and time,
 we'll confirm your booking. A deposit will be taken after your booking request is confirmed. No money will be taken until your booking is confirmed.</p>
 
 <form action="/request-date-time">
   <div id="fieldset">
     <label for="products">Select service:</label>
     <select name="product" id="products">
-        <option value="">--Please choose an option--</option>
-        <option value="Laser Hair Removal">Laser Hair Removal</option>
-        <option value="Waxing">Waxing</option>
-        <option value="Threading">Threading</option>
+      <option value="">--Please choose an option--</option>
+      {% for product in products %}
+      <option value="{{ product.product_id }}">{{product.product_name}}</option>
+      {% endfor %}
     </select>
 
     <br />
