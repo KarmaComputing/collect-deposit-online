@@ -1,4 +1,5 @@
 from fileinput import filename
+import pathlib
 from flask import (
     Flask,
     render_template,
@@ -85,7 +86,8 @@ def set_stripe_livemode():
 def get_stripe_connect_account_id():
     filename = "stripe_connect_account_id.txt"
     filePath = Path(SHARED_MOUNT_POINT, filename)
-
+    if pathlib.Path.is_file(filePath) is False:
+        return False
     with open(filePath) as fp:
         account_id = fp.read()
     return account_id
