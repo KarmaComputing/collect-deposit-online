@@ -52,7 +52,26 @@ def get_stripe_business_profile():
 
 
 def get_stripe_connect_account():
-    return os.getenv("STRIPE_CONNECT_ACCOUNT")
+
+    stripe.api_key = get_stripe_secret_key()
+
+    account_id = get_stripe_connect_account_id()
+    if account_id is None or account_id == "":
+        return None
+
+    try:
+        account = stripe.Account.retrieve(account_id)
+    except stripe.error.PermissionError as e:
+        log.error(f"Stripe PermissionError {e}")
+        raise
+    except stripe.error.InvalidRequestError as e:
+        log.error(f"Stripe InvalidRequestError {e}")
+        raise
+    except Exception as e:
+        log.info(f"Exception getting Stripe connect account {e}")
+        account = None
+
+    return account
 
 
 def get_stripe_livemode():
@@ -69,7 +88,6 @@ def get_stripe_connect_account_id():
 
     with open(filePath) as fp:
         account_id = fp.read()
-    breakpoint()
     return account_id
 
 
@@ -83,13 +101,23 @@ def set_stripe_connect_account_id(account_id):
 
 
 def get_stripe_connect_completed_status():
-    return os.getenv("STRIPE_CONNECT_COMPLETED_STATUS")
+    filename = "stripe_connect_completed.txt"
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+
+    with open(filePath) as fp:
+        status = bool(fp.read())
+
+    return status
 
 
 def set_stripe_connect_completed_status(status: bool) -> bool:
+    filename = "stripe_connect_completed.txt"
+    filePath = Path(SHARED_MOUNT_POINT, filename)
 
-    os.environ["STRIPE_CONNECT_COMPLETED_STATUS"] = str(status)
-    return bool(os.environ["STRIPE_CONNECT_COMPLETED_STATUS"])
+    with open(filePath, "w") as fp:
+        fp.write(str(status))
+
+    return status
 
 
 Flask_SaaS(
