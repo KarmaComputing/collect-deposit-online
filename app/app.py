@@ -20,12 +20,17 @@ from .email import (
     send_deposit_refund_email,
 )
 from functools import wraps
+import logging
 
-load_dotenv(verbose=True)  # take environment variables from .env.
+PYTHON_LOG_LEVEL = os.getenv("PYTHON_LOG_LEVEL", "DEBUG")
+
+log = logging.getLogger()
+log.setLevel(PYTHON_LOG_LEVEL)
+
+load_dotenv(verbose=True)  # Take environment variables from .env.
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
 SHARED_MOUNT_POINT = os.getenv("SHARED_MOUNT_POINT")
 SECRET_KEY = os.getenv("SECRET_KEY")
-
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = SECRET_KEY
@@ -60,32 +65,58 @@ def admin():
 
 @app.route("/")
 def choose():
-    return render_template("choose.html", locale="es")
+
+    return render_template("choose.html", products=get_products())
 
 
-@app.route("/request-date-time", methods=["GET", "POST"])
+def get_products(include_archived=False):
+    """Get all products exluding archivedn by default"""
+    products_path = Path(SHARED_MOUNT_POINT, "products")
+    product_files = list(
+        filter(lambda y: y.is_file(), products_path.iterdir())
+    )  # noqa: E501
+    products = []
+    for path in product_files:
+        with open(path) as fp:
+            product = json.loads(fp.read())
+            if product["active"] == "1":
+                products.append(product)
+    return products
+
+
+@app.route("/request-date-time")
 def set_date_time():
-    return render_template("request-date-time.html")
+    product_id = request.form.get("product_id")
+    return render_template("request-date-time.html", product_id=product_id)
 
 
-@app.route("/deposit", methods=["GET", "POST"])
+@app.route("/deposit")
 def deposit():
-    return render_template("deposit.html")                                      #"""TODO - Will need to pass chosen product metadata to this page, to display price dynamically.
+    product_id = request.args.get("product")
+    if product_id is None:
+        flash("Product must be selected but was not present.")
+        return redirect(url_for("choose"))
+    product = get_product(product_id)
+    return render_template("deposit.html", product=product)
 
 
-@app.route("/create-checkout-session", methods=["GET", "POST"])
+@app.route("/create-checkout-session", methods=["POST"])
 def create_checkout_session():
     stripe.api_key = STRIPE_API_KEY
-
-    requested_product = request.form.get("product")
+    requested_product_id = request.form.get("product")
     requested_time = request.form.get("time")
     requested_date = request.form.get("date")
     customer_email = request.form.get("email", None)
     customer_name = request.form.get("name", None)
     customer_mobile = request.form.get("mobile", None)
+    product = get_product(requested_product_id)
+    deposit_amount = product["deposit_amount"]
+    product_name = product["product_name"]
 
     metadata = {
-        "requested_product": requested_product,
+        "requested_product_id": requested_product_id,
+        "product_name": product_name,
+        "deposit_amount": deposit_amount,
         "requested_date": requested_date,
         "requested_time": requested_time,
         "customer_email": customer_email,
@@ -109,7 +140,7 @@ def stripe_success():
     stripe.api_key = STRIPE_API_KEY
     stripe_session_id = request.args.get("session_id")
     session = stripe.checkout.Session.retrieve(stripe_session_id)
-    print(session)
+    log.debug(f"Session data: {session}")
     setup_intent = stripe.SetupIntent.retrieve(session.setup_intent)
     # Create customer
     stripe_customer = stripe.Customer.create(
@@ -131,7 +162,7 @@ def stripe_success():
         metadata["stripe_customer_id"] = stripe_customer.id
         metadata["deposit_status"] = "available_for_collection"
         fp.write(json.dumps(metadata))
-    print(session.metadata)
+    log.debug(session.metadata)
     return render_template("success.html")
 
 
@@ -176,7 +207,6 @@ def collected_deposits():
             deposit_intent = json.loads(fp.read())
             if deposit_intent["deposit_status"] == "collected":
                 collected_deposits.append(deposit_intent)
-
     return render_template(
         "admin/deposits-collected.html", collected_deposits=collected_deposits
     )  # noqa: E501
@@ -202,18 +232,24 @@ def cancelled_bookings():
         "admin/cancelled-bookings.html", deposits=deposits
     )  # noqa: E501
 
+    # get_product() fetches product metadata, takes product_id as argument
 
-@app.route("/admin/charge-deposit")
+
+@app.route("/admin/charge-deposit", methods=["GET", "POST"])
 @login_required
 def charge_deposit():
     """Charge the request to pay a deposit."""
+    requested_product_id = request.args.get("requested_product_id")
+    product = get_product(requested_product_id)
+    deposit = product["deposit_amount"]
+
     payment_method_id = request.args.get("payment_method_id", None)
     stripe_customer_id = request.args.get("stripe_customer_id", None)
     filename = request.args.get("timestamp", None)
 
     stripe.api_key = STRIPE_API_KEY
     payment_intent = stripe.PaymentIntent.create(
-        amount=1500,
+        amount=deposit,
         currency="gbp",
         payment_method_types=["card"],
         payment_method=payment_method_id,
@@ -229,10 +265,10 @@ def charge_deposit():
         metadata = json.loads(fp.read())
         metadata["deposit_status"] = "collected"
         metadata["stripe_payment_intent_id"] = payment_intent.id
+        metadata["requested_product_id"] = requested_product_id
         fp.seek(0)
         fp.write(json.dumps(metadata))
         fp.truncate()
-
     # Note: There may be no need to stripe.PaymentIntent.capture it manually
     # See https://stripe.com/docs/api/payment_intents/confirm?lang=python
     notify_deposit_collected(metadata)
@@ -251,32 +287,28 @@ def reschedule_deposit():
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath) as fp:
         metadata = json.loads(fp.read())
-
     return render_template("admin/reschedule.html", metadata=metadata)
 
 
 @app.route("/admin/save-rescheduled-deposit")
 @login_required
 def save_rescheduled_desposit():
-    requested_product = request.args.get("product")
+    requested_product_id = request.args.get("product_id")
     requested_time = request.args.get("time")
     requested_date = request.args.get("date")
     filename = request.args.get("timestamp", None)
-
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath, "r+") as fp:
         metadata = json.loads(fp.read())
         metadata["requested_date"] = requested_date
         metadata["requested_time"] = requested_time
-        metadata["requested_product"] = requested_product
-
         fp.seek(0)
         fp.write(json.dumps(metadata))
         fp.truncate()
     message = f"""Booking has been rescheduled to:
             Date: {metadata['requested_date']}
             Time: {metadata['requested_time']}
-            Service/Product: {metadata['requested_product']}"""
+            Service/Product: {metadata['product_name']}"""
     send_booking_rescheduled_email(
         to=metadata["customer_email"], content=message
     )  # noqa: E501
@@ -288,18 +320,16 @@ def save_rescheduled_desposit():
 @login_required
 def cancel_booking():
     filename = request.args.get("timestamp", None)
-
     filePath = Path(SHARED_MOUNT_POINT, filename)
     with open(filePath, "r+") as fp:
         metadata = json.loads(fp.read())
         metadata["deposit_status"] = "cancelled"
-
         fp.seek(0)
         fp.write(json.dumps(metadata))
         fp.truncate()
 
     message = f"""Booking has been cancelled:
-            Service/Product: {metadata['requested_product']}
+            Service/Product: {metadata['requested_product_id']}
             Date: {metadata['requested_date']}
             Time: {metadata['requested_time']}.
             Has now been cancelled."""
@@ -315,12 +345,16 @@ def cancel_booking():
 def refund_deposit():
     filename = request.args.get("timestamp", None)
     filePath = Path(SHARED_MOUNT_POINT, filename)
-
     with open(filePath, "r+") as fp:
         metadata = json.loads(fp.read())
-        # Perform refund
+        # Don't attemp refund if no stripe_payment_intent_id present
+        if "stripe_payment_intent_id" not in metadata:
+            msg = "No stripe_payment_intent_id found for this deposit, so cannot perform refund."
+            flash(msg)
+            return redirect(url_for("refunded_deposits"))
+
         stripe.api_key = STRIPE_API_KEY
-        try:
+        try:  # Perform refund
             stripe_refund = stripe.Refund.create(
                 payment_intent=metadata["stripe_payment_intent_id"]
             )
@@ -330,7 +364,7 @@ def refund_deposit():
             fp.write(json.dumps(metadata))
             fp.truncate()
             message = f"""Booking deposit refund started:
-                    Service/Product: {metadata['requested_product']}
+                    Service/Product: {metadata['requested_product_id']}
                     Date: {metadata['requested_date']}
                     Time: {metadata['requested_time']}.
                     Is being refunded."""
@@ -343,7 +377,6 @@ def refund_deposit():
                 flash("Charge has already been refunded")
             else:
                 raise
-
     return redirect(url_for("refunded_deposits"))
 
 
@@ -361,7 +394,6 @@ def refunded_deposits():
             deposit_intent = json.loads(fp.read())
             if deposit_intent["deposit_status"] == "refunded":
                 deposits.append(deposit_intent)
-
     return render_template(
         "admin/refunded-deposits.html", deposits=deposits
     )  # noqa: E501
@@ -374,3 +406,108 @@ def refunded_deposits():
 def currencyFormat(value):
     value = float(value) / 100
     return "£{:,.2f}".format(value)
+
+@app.route("/admin/products", methods=["GET", "POST"])
+@login_required
+def products():
+    """List products in admin dashboard"""
+    products = get_products()
+    return render_template("admin/products.html", products=products)  # noqa: E501
+
+
+@app.route("/admin/product/delete/<int:product_id>", methods=["GET"])
+@login_required
+def delete_product(product_id: int):
+    """Delete a product"""
+    try:
+        product_id = int(product_id)
+        remove_product(product_id)
+    except Exception as e:
+        log.error(f"Error deleting produt: {e}")
+    flash(f"Product {product_id} deleted")
+    return redirect(url_for("products"))
+
+
+@app.route("/admin/product/edit/<int:product_id>", methods=["GET", "POST"])
+@login_required
+def edit_product(product_id: int):
+    product = get_product(product_id)
+
+    if request.method == "POST":
+        product_name = request.form.get("product_name")
+        deposit_amount = request.form.get("deposit_amount")
+        # Update the product name and deposit amount
+        product["product_name"] = product_name
+        product["deposit_amount"] = int(deposit_amount)
+
+        # Save
+        update_product(product_id, product)
+
+        flash("Product updated")
+        return redirect(url_for("products"))
+
+    return render_template("admin/edit-product.html", product=product)  # noqa: E501
+
+
+@app.route("/admin/add-product")
+@login_required
+def add_product():
+    """Add new product"""
+    if request.args.get("product_name") and request.args.get("deposit_amount"):
+        filename = str(time.time_ns())
+        metadata = {}
+        metadata["product_name"] = request.args.get("product_name")
+        metadata["deposit_amount"] = request.args.get("deposit_amount")
+        metadata["product_id"] = filename
+        metadata["active"] = "1"
+        filePath = Path(SHARED_MOUNT_POINT, "products", filename)
+        Path.mkdir(filePath.parent, parents=True, exist_ok=True)
+        with open(filePath, "w") as fp:
+            fp.write(json.dumps(metadata))
+        flash("Product saved.")
+        return redirect(url_for("products"))
+    return render_template("admin/add-product.html")  # noqa: E501
+
+
+@app.route("/admin/edit-success")
+@login_required
+def edit_success(product):
+    time.sleep(1)
+    return render_template("admin/edit-success.html", product=product)
+
+
+def remove_product(product_id):
+    product = get_product(product_id)
+    product["active"] = "0"
+    update_product(product_id, product)
+
+
+def get_product(product_id, include_archived=False) -> dict:
+    """Return a single products metadata"""
+
+    products_path = Path(SHARED_MOUNT_POINT, "products")
+    product_full_path = Path(products_path, str(product_id))
+    try:
+        with open(product_full_path, "r") as fp:
+            product = json.load(fp)
+            if product["active"] == "1":
+                return product
+    except FileNotFoundError as e:
+        log.error(f"Product id file not found {product_id}. {e}")
+        raise
+    except Exception as e:
+        log.error(f"Unable to get product id not found {product_id}. {e}")
+        raise
+
+
+def update_product(product_id: int, updated_product) -> dict:
+    """Update an existing product"""
+    products_path = Path(SHARED_MOUNT_POINT, "products")
+    product_full_path = Path(products_path, str(product_id))
+    try:
+        with open(product_full_path, "w") as fp:
+            json.dump(updated_product, fp)
+
+        return updated_product
+    except Exception as e:
+        log.error("Could not update product: {product_id}. {e}")
