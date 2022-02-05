@@ -12,7 +12,7 @@
   <div style="display:block" class="product-admin">
     <form method="post" action="/admin/products">
     <h4>{{ metadata['product_name'] }}</h4>
-      Deposit Amount: &pound;{{ metadata['deposit_amount'] }}<br /><br />
+      Deposit Amount: {{ metadata['deposit_amount'] | currency }}<br /><br />
       <a href="/admin/product/edit/{{ metadata['product_id'] }}" class="btn btn-primary inline">Edit</a>
       <a href="/admin/product/delete/{{ metadata['product_id'] }}" class="btn btn-danger inline">Delete</a>
     </form>
