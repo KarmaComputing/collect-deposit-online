@@ -41,4 +41,5 @@ jobs:
         REQUESTED_PRODUCTS_FOLDER: storage/requested_products
       run: |
         mkdir -p storage/requested_products
+        mkdir -p $SHARED_MOUNT_POINT/products
         python -m pytest -vv
