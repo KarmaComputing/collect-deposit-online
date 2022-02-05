@@ -76,11 +76,25 @@ def get_stripe_connect_account():
 
 
 def get_stripe_livemode():
-    return os.getenv("STRIPE_LIVEMODE")
+    filename = "stripe_connect_live_mode.txt"
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+    if pathlib.Path.is_file(filePath) is False:
+        return False
+    with open(filePath) as fp:
+        livemode = fp.read()
+    livemode = bool(livemode)
+    return livemode
 
 
-def set_stripe_livemode():
-    return os.getenv("STRIPE_LIVEMODE")
+def set_stripe_livemode(livemode):
+    filename = "stripe_connect_live_mode.txt"
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+    if pathlib.Path.is_file(filePath) is False:
+        return False
+    with open(filePath, "w") as fp:
+        fp.write(str(livemode))
+    livemode = bool(livemode)
+    return livemode
 
 
 def get_stripe_connect_account_id():
@@ -192,7 +206,6 @@ def settings_page():
 
 @app.route("/")
 def choose():
-
     return render_template("choose.html", products=get_products())
 
 
