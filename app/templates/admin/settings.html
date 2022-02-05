@@ -4,12 +4,10 @@
 
 {% block body %}
 
-<h1>Deposit Collection System</h1>
+<h1>Settings</h1>
 {{ admin_nav() }}
 
-<a href="{{ url_for('stripe_connect.index') }}">Connect to Stripe</a>
-
-<h3>Use the menu above to manage deposits</h3>
+  <a href="{{ url_for('stripe_connect.index') }}">Connect to Stripe</a>
 
 
 {% endblock %}

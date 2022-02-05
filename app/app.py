@@ -1,3 +1,5 @@
+from fileinput import filename
+import pathlib
 from flask import (
     Flask,
     render_template,
@@ -20,6 +22,7 @@ from .email import (
     send_deposit_refund_email,
 )
 from functools import wraps
+from flask_saas import Flask_SaaS
 import logging
 
 PYTHON_LOG_LEVEL = os.getenv("PYTHON_LOG_LEVEL", "DEBUG")
@@ -37,6 +40,117 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = SECRET_KEY
 
 
+# Initialize flask_saas
+def get_stripe_secret_key():
+    return os.getenv("STRIPE_API_KEY")
+
+
+def get_stripe_business_profile():
+    business_profile = {
+        "name": os.getenv("STRIPE_BUSINESS_PROFILE_NAME"),
+        "email": os.getenv("STRIPE_BUSINESS_EMAIL"),
+    }
+    return business_profile
+
+
+def get_stripe_connect_account():
+
+    stripe.api_key = get_stripe_secret_key()
+
+    account_id = get_stripe_connect_account_id()
+    if account_id is None or account_id == "":
+        return None
+
+    try:
+        account = stripe.Account.retrieve(account_id)
+    except stripe.error.PermissionError as e:
+        log.error(f"Stripe PermissionError {e}")
+        raise
+    except stripe.error.InvalidRequestError as e:
+        log.error(f"Stripe InvalidRequestError {e}")
+        raise
+    except Exception as e:
+        log.info(f"Exception getting Stripe connect account {e}")
+        account = None
+
+    return account
+
+
+def get_stripe_livemode():
+    filename = "stripe_connect_live_mode.txt"
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+    if pathlib.Path.is_file(filePath) is False:
+        return False
+    with open(filePath) as fp:
+        livemode = fp.read()
+    livemode = bool(livemode)
+    return livemode
+
+
+def set_stripe_livemode(livemode):
+    filename = "stripe_connect_live_mode.txt"
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+    if pathlib.Path.is_file(filePath) is False:
+        return False
+    with open(filePath, "w") as fp:
+        fp.write(str(livemode))
+    livemode = bool(livemode)
+    return livemode
+
+
+def get_stripe_connect_account_id():
+    filename = "stripe_connect_account_id.txt"
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+    if pathlib.Path.is_file(filePath) is False:
+        return False
+    with open(filePath) as fp:
+        account_id = fp.read()
+    return account_id
+
+
+def set_stripe_connect_account_id(account_id):
+    filename = "stripe_connect_account_id.txt"
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+
+    with open(filePath, "w") as fp:
+        fp.write(account_id)
+    return account_id
+
+
+def get_stripe_connect_completed_status():
+    filename = "stripe_connect_completed.txt"
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+
+    with open(filePath) as fp:
+        status = bool(fp.read())
+
+    return status
+
+
+def set_stripe_connect_completed_status(status: bool) -> bool:
+    filename = "stripe_connect_completed.txt"
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+
+    with open(filePath, "w") as fp:
+        fp.write(str(status))
+
+    return status
+
+
+Flask_SaaS(
+    app=app,
+    get_stripe_secret_key=get_stripe_secret_key,
+    get_stripe_business_profile=get_stripe_business_profile,
+    get_stripe_connect_account=get_stripe_connect_account,
+    get_stripe_livemode=get_stripe_livemode,
+    set_stripe_livemode=set_stripe_livemode,
+    get_stripe_connect_account_id=get_stripe_connect_account_id,
+    set_stripe_connect_account_id=set_stripe_connect_account_id,
+    get_stripe_connect_completed_status=get_stripe_connect_completed_status,
+    set_stripe_connect_completed_status=set_stripe_connect_completed_status,
+)
+
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -45,6 +159,27 @@ def login_required(f):
         return f(*args, **kwargs)
 
     return decorated_function
+
+
+def get_app_data() -> dict:
+    """
+    Returns the application data such as Stripe Connect account ID,
+    and if the application is in Stripe live or test mode.
+
+    It does not contain any sensitive data.
+    """
+    filename = "app-data.json"
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+    with open(filePath, "r") as fp:
+        settings = json.loads(fp.read())
+    return settings
+
+
+def update_app_data(data: dict):
+    filename = "app-data.json"
+    filePath = Path(SHARED_MOUNT_POINT, filename)
+    with open(filePath, "w") as fp:
+        fp.write(json.dumps(data))
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -64,9 +199,14 @@ def admin():
     return render_template("admin/dashboard.html")
 
 
+@app.route("/admin/settings")
+@login_required
+def settings_page():
+    return render_template("admin/settings.html")
+
+
 @app.route("/")
 def choose():
-
     return render_template("choose.html", products=get_products())
 
 
@@ -87,16 +227,17 @@ def get_products(include_archived=False):
 
 @app.route("/request-date-time")
 def set_date_time():
-    product_id = request.form.get("product_id")
-    return render_template("request-date-time.html", product_id=product_id)
+    product_id = request.args.get("product_id")
+    product = get_product(product_id)
+    return render_template("request-date-time.html", product=product)
 
 
 @app.route("/deposit")
 def deposit():
-    product_id = request.args.get("product")
+    product_id = request.args.get("product_id")
     if product_id is None:
         flash("Product must be selected but was not present.")
-        return redirect(url_for("choose"))
+        # return redirect(url_for("choose"))
     product = get_product(product_id)
     return render_template("deposit.html", product=product)
 
@@ -104,7 +245,7 @@ def deposit():
 @app.route("/create-checkout-session", methods=["POST"])
 def create_checkout_session():
     stripe.api_key = STRIPE_API_KEY
-    requested_product_id = request.form.get("product")
+    requested_product_id = request.form.get("product_id")
     requested_time = request.form.get("time")
     requested_date = request.form.get("date")
     customer_email = request.form.get("email", None)
