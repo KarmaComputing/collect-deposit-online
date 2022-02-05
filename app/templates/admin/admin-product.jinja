@@ -1,0 +1,22 @@
+{% macro display_product(metadata) -%}
+
+  <style>
+  .product-admin {
+    border: 2px solid #c75275;
+    padding: 15px;
+  }
+  </style>
+
+
+
+  <div style="display:block" class="product-admin">
+    <form method="post" action="/admin/products">
+    <h4>{{ metadata['product_name'] }}</h4>
+      Deposit Amount: &pound;{{ metadata['deposit_amount'] }}<br /><br />
+      <a href="/admin/product/edit/{{ metadata['product_id'] }}" class="btn btn-primary inline">Edit</a>
+      <a href="/admin/product/delete/{{ metadata['product_id'] }}" class="btn btn-danger inline">Delete</a>
+    </form>
+  </div>
+
+{%- endmacro %}
+
