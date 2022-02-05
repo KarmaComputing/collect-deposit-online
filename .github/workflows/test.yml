@@ -38,5 +38,7 @@ jobs:
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
         STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
         SHARED_MOUNT_POINT: ${{ secrets.SHARED_MOUNT_POINT }}
+        REQUESTED_PRODUCTS_FOLDER: storage/requested_products
       run: |
+        mkdir -p storage/requested_products
         python -m pytest -vv
