@@ -228,6 +228,8 @@ def get_products(include_archived=False):
 @app.route("/request-date-time")
 def set_date_time():
     product_id = request.args.get("product_id")
+    if product_id is None:
+        return redirect(url_for("choose"))
     product = get_product(product_id)
     return render_template("request-date-time.html", product=product)
 
@@ -237,7 +239,7 @@ def deposit():
     product_id = request.args.get("product_id")
     if product_id is None:
         flash("Product must be selected but was not present.")
-        # return redirect(url_for("choose"))
+        return redirect(url_for("choose"))
     product = get_product(product_id)
     return render_template("deposit.html", product=product)
 

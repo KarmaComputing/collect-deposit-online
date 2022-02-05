@@ -32,9 +32,9 @@ def test_post_login_200_ok(client):
     assert b"Deposit Collection System" in req.data
 
 
-def test_get_reqest_date_time_200_ok(client):
+def test_get_reqest_date_time_302_redirect(client):
     req = client.get("/request-date-time")
-    assert req.status_code == 200
+    assert req.status_code == 302
 
 
 def test_get_deposit_without_product_302_ok(client):
