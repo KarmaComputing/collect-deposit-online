@@ -6,11 +6,6 @@ name: Test
 on:
   workflow_dispatch:
   push:
-    branches:
-      - 12-add-tests
-  pull_request:
-    branches:
-      - 12-add-tests
 
 jobs:
   test:
