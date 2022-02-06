@@ -102,7 +102,7 @@ def get_stripe_connect_account_id():
     filename = "stripe_connect_account_id.txt"
     filePath = Path(SHARED_MOUNT_POINT, filename)
     if pathlib.Path.is_file(filePath) is False:
-        return False
+        return None
     with open(filePath) as fp:
         account_id = fp.read()
     return account_id
@@ -133,7 +133,7 @@ def set_stripe_connect_completed_status(status: bool) -> bool:
 
     with open(filePath, "w") as fp:
         fp.write(str(status))
-
+    status = bool(status)
     return status
 
 
