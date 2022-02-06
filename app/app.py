@@ -83,7 +83,7 @@ def get_stripe_livemode():
         return False
     with open(filePath) as fp:
         livemode = fp.read()
-    livemode = bool(livemode)
+    livemode = bool(int(livemode))
     return livemode
 
 
