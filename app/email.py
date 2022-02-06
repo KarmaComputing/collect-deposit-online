@@ -27,6 +27,21 @@ class EmailMessageQueue(EmailMessage):
             )
 
 
+def send_test_email_notification(
+    to=EMAIL_FROM, content="This is a test email notification"
+):
+    try:
+        msg = EmailMessageQueue()
+        msg["Subject"] = "Test email notification - Collect Deposits Online"
+        msg["From"] = EMAIL_FROM
+        msg["To"] = to
+        msg.set_content(content)
+        msg["Reply-To"] = EMAIL_FROM
+        msg.queue()
+    except Exception as e:
+        log.error(f"Failed to send test email notification. {e}")
+
+
 def send_deposit_collected_email(to):
     try:
         msg = EmailMessageQueue()

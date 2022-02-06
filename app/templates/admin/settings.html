@@ -7,7 +7,19 @@
 <h1>Settings</h1>
 {{ admin_nav() }}
 
-  <a href="{{ url_for('stripe_connect.index') }}">Connect to Stripe</a>
+<h2>Payments</h2>
+<ul>
+  <li><a href="{{ url_for('stripe_connect.index') }}">Connect to Stripe</a></li>
+</ul>
+
+<h2>Emails</h2>
+
+Send a test email notification:
+
+<ul>
+  <li><a href="{{ url_for('test_email_notifications') }}">Send test email to myself.</a></li>
+</ul>
+
 
 
 {% endblock %}
