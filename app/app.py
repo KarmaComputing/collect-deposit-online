@@ -16,6 +16,7 @@ import time
 import json
 from pathlib import Path
 from .email import (
+    send_test_email_notification,
     send_deposit_collected_email,
     send_booking_rescheduled_email,
     send_booking_cancelled_email,
@@ -203,6 +204,15 @@ def admin():
 @login_required
 def settings_page():
     return render_template("admin/settings.html")
+
+
+@app.route("/admin/test-email-notifications")
+@login_required
+def test_email_notifications():
+    to = os.getenv("EMAIL_FROM")
+    send_test_email_notification(to=to)
+    flash(f"Sent test email notification to {to}")
+    return redirect(url_for("settings_page"))
 
 
 @app.route("/")
