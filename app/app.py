@@ -396,7 +396,7 @@ def charge_deposit():
     # See https://stripe.com/docs/connect/direct-charges#collecting-fees
     requested_product_id = request.args.get("requested_product_id")
     product = get_product(requested_product_id)
-    amount = product["deposit_amount"]
+    amount = int(product["deposit_amount"])
 
     payment_method_id = request.args.get("payment_method_id", None)
     stripe_customer_id = request.args.get("stripe_customer_id", None)
