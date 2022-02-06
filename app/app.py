@@ -35,6 +35,8 @@ STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
 SHARED_MOUNT_POINT = os.getenv("SHARED_MOUNT_POINT")
 REQUESTED_PRODUCTS_FOLDER = os.getenv("REQUESTED_PRODUCTS_FOLDER")
 SECRET_KEY = os.getenv("SECRET_KEY")
+STRIPE_APPLICATION_FEE_PERCENT = os.getenv("STRIPE_APPLICATION_FEE_PERCENT")
+STRIPE_APPLICATION_FLATE_RATE_FEE = int(os.getenv("STRIPE_APPLICATION_FLATE_RATE_FEE"))
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = SECRET_KEY
@@ -267,6 +269,7 @@ def create_checkout_session():
     }
 
     stripe_session = stripe.checkout.Session.create(
+        stripe_account=get_stripe_connect_account_id(),
         payment_method_types=["card"],
         mode="setup",
         customer_email=customer_email,
@@ -281,19 +284,28 @@ def create_checkout_session():
 def stripe_success():
     stripe.api_key = STRIPE_API_KEY
     stripe_session_id = request.args.get("session_id")
-    session = stripe.checkout.Session.retrieve(stripe_session_id)
+    session = stripe.checkout.Session.retrieve(
+        stripe_session_id, stripe_account=get_stripe_connect_account_id()
+    )
     log.debug(f"Session data: {session}")
-    setup_intent = stripe.SetupIntent.retrieve(session.setup_intent)
+    setup_intent = stripe.SetupIntent.retrieve(
+        session.setup_intent, stripe_account=get_stripe_connect_account_id()
+    )
     # Create customer
     stripe_customer = stripe.Customer.create(
-        email=session.metadata["customer_email"]
+        email=session.metadata["customer_email"],
+        stripe_account=get_stripe_connect_account_id(),
     )  # noqa: E501
     # Attach PaymentMethod to a customer
     payment_method = setup_intent.payment_method
-    stripe.PaymentMethod.attach(
-        payment_method,
-        customer=stripe_customer,
-    )
+    try:
+        stripe.PaymentMethod.attach(
+            payment_method,
+            customer=stripe_customer,
+            stripe_account=get_stripe_connect_account_id(),
+        )
+    except stripe.error.InvalidRequestError as e:
+        log.error(f"Error attaching payment method {e}")
     filename = str(time.time_ns())
     filePath = Path(REQUESTED_PRODUCTS_FOLDER, filename)
     with open(filePath, "w") as fp:
@@ -381,21 +393,32 @@ def cancelled_bookings():
 @login_required
 def charge_deposit():
     """Charge the request to pay a deposit."""
+    # See https://stripe.com/docs/connect/direct-charges#collecting-fees
     requested_product_id = request.args.get("requested_product_id")
     product = get_product(requested_product_id)
-    deposit = product["deposit_amount"]
+    amount = product["deposit_amount"]
 
     payment_method_id = request.args.get("payment_method_id", None)
     stripe_customer_id = request.args.get("stripe_customer_id", None)
     filename = request.args.get("timestamp", None)
 
+    application_fee_amount = int(
+        (
+            amount * float(STRIPE_APPLICATION_FEE_PERCENT) / 100
+            + (STRIPE_APPLICATION_FLATE_RATE_FEE / 100)
+        )
+        * 100
+    )
+
     stripe.api_key = STRIPE_API_KEY
     payment_intent = stripe.PaymentIntent.create(
-        amount=deposit,
+        amount=amount,
         currency="gbp",
         payment_method_types=["card"],
         payment_method=payment_method_id,
         customer=stripe_customer_id,
+        application_fee_amount=application_fee_amount,
+        stripe_account=get_stripe_connect_account_id(),
     )
     # Confirm the PaymentIntent
     # Note: the PaymentIntent will automatically transation to succeeded if possible # noqa: E501
@@ -485,6 +508,7 @@ def cancel_booking():
 @app.route("/admin/refund-deposit")
 @login_required
 def refund_deposit():
+    # See https://stripe.com/docs/connect/direct-charges#issuing-refunds
     filename = request.args.get("timestamp", None)
     filePath = Path(REQUESTED_PRODUCTS_FOLDER, filename)
     with open(filePath, "r+") as fp:
@@ -498,7 +522,9 @@ def refund_deposit():
         stripe.api_key = STRIPE_API_KEY
         try:  # Perform refund
             stripe_refund = stripe.Refund.create(
-                payment_intent=metadata["stripe_payment_intent_id"]
+                payment_intent=metadata["stripe_payment_intent_id"],
+                stripe_account=get_stripe_connect_account_id(),
+                refund_application_fee=False,
             )
             metadata["stripe_refund_id"] = stripe_refund.id
             metadata["deposit_status"] = "refunded"
