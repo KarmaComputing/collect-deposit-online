@@ -90,8 +90,6 @@ def get_stripe_livemode():
 def set_stripe_livemode(livemode):
     filename = "stripe_connect_live_mode.txt"
     filePath = Path(SHARED_MOUNT_POINT, filename)
-    if pathlib.Path.is_file(filePath) is False:
-        return False
     with open(filePath, "w") as fp:
         fp.write(str(livemode))
     livemode = bool(livemode)
